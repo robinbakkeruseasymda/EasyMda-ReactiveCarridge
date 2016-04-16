@@ -1,0 +1,3 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*	" 
+class="DartSearchFormHtml" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>

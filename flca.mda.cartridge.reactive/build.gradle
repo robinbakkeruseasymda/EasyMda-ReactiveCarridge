@@ -1,0 +1,33 @@
+
+apply from: "../flca.easymda.plugin/gradle-common/common.gradle"
+
+archivesBaseName = "easymda.cartridge.reactive"
+
+sourceSets {
+   main {
+      java {
+         srcDirs = ["src/main/java", "src-jet-generated"]
+      }
+   }
+
+   test {
+      java {
+         srcDirs = ["src/main/java", "src-jet-generated"]
+      }
+   }
+
+}
+buildDir = "target"
+
+dependencies {
+	compile "commons-lang:commons-lang:2.6",
+		"org.slf4j:slf4j-api:1.7.6",
+		"junit:junit:4.11",
+		"joda-time:joda-time:2.0",
+		"easymda:easymda.common.api:${easymda_version}"
+}	
+
+task s(dependsOn: [standard] ) << {
+}
+
+

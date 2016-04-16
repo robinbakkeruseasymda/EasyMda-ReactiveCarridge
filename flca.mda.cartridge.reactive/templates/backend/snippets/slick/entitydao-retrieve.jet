@@ -1,0 +1,107 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEntityDaoBaseRetrieve" %>
+<%@ include file="../../jet-includes/java-class-init.jetinc" %>
+<% String rowmapper = tplu.getClassName(Tid.SCALA_ROWMAPPERS.name()); %>
+<% String row= entity + "Row"; String rows= entity + "Rows"; String query= nu.uncapName(entity) + "Query"; %>
+<% String mapfromRow= "mapFrom" + row; String maptoRow= "mapTo" + row;%>
+<% ImportUtils importUtils = new ImportUtils(false); %>
+
+<% if (isBaseClass || isSubClass) { %>
+<%	importUtils.addImport("com.easymda.util.FetchEager"); %>
+<% } %> 
+
+<% if (isNormalClass) { %>
+
+	def retrieve<%=entity%>(<%=idname%>:<%=idtype%>, fd:Option[<%=fetchModel%>]=Some(<%=fetchModel%>()))(implicit session: Session): Option[<%=entity%>] = {
+		logger.info(s"retrieve <%=entity%> $<%=idname%>")
+		val list = <%=query%>.list.filter(Some(<%=idname%>) == _.<%=idname%>)
+		if (list.size == 1) {
+			var r = <%=mapfromRow%>(list.head) 
+			r = retrieve<%=entity%>Rels(r, fd)
+			Some(finish<%=entity%>(r, fd))
+		} else {
+			logger.error(s"could not retrieve <%=entity%> $<%=idname%>")
+			None
+		}
+	}
+	
+ 	private def retrieve<%=entity%>Rels(obj: <%=entity%>, fd: Option[<%=fetchModel%>])(implicit session: Session): <%=entity%> = {
+<%= tu.genRetrieveNestedObjectsStr(cc)%>
+		obj
+	}
+	
+<% } else if (isBaseClass) { %>
+
+	def retrieve<%=entity%>(<%=idname%>:<%=idtype%>, fd:Option[<%=fetchModel%>]=Some(new FetchEager()))(implicit session: Session): Option[<%=entity%>] = {
+		logger.info(s"retrieve <%=entity%> $<%=idname%>")
+		val list = <%=query%>.list.filter(Some(<%=idname%>) == _.<%=idname%>)
+		if (list.size == 1) {
+			var r:Option[<%=entity%>] = retrieveConcrete<%=entity%>(list.head, fd)
+			Some(finish<%=entity%>(r.get))
+		} else {
+			logger.error(s"could not retrieve <%=entity%> $<%=idname%>")
+			None
+		}
+	}
+		
+	def retrieveConcrete<%=entity%>(row:<%=row%>, fd:Option[FetchDepth])(implicit session: Session): Option[<%=entity%>] = {
+		row.discriminator match {
+			case "L" => retrieve<%=entity%>(row.id.get, fd)
+			case _ => null
+		}
+	}
+	
+<% } else { // subClass %>
+
+	def retrieve<%=entity%>(id:Long, fd:Option[FetchDepth]=Some(new FetchEager()))(implicit session: Session): Option[<%=entity%>] = {
+		logger.info(s"retrieve <%=entity%> $id")
+		val list = <%=query%>.list.filter(Some(id) == _.id)
+		if (list.size == 1) {
+			var r = mapFrom<%=entity%>Row(list.head)
+			r = retrieve<%=entity%>NestedObjects(r, fd)
+			Some(finish<%=entity%>(r))
+		} else {
+			logger.error(s"could not retrieve <%=entity%> $id")
+			None
+		}
+	}
+	
+	/*
+	 * This method is called from the baseclass
+	 */
+	def retrieve<%=entity%>(baseRow: <%=superClassname%>Row)(implicit session: Session): <%=entity%> = {
+		logger.info(s"retrieve concrete <%=entity%> with id=${baseRow.id}")
+		val list = <%=query%>.list.filter(baseRow.id == _.id)
+		if (list.size == 1) {
+			val r1 = <%=mapfromRow%>s(baseRow, list.head)
+			//nested object n.a.
+			r1
+		} else {
+			val msg = s"could not retrieve concrete <%=entity%> with id=${baseRow.id}"
+			logger.error(msg)
+			throw new RuntimeException(msg)
+		}
+	}	
+	
+	private def retrieve<%=entity%>NestedObjects(obj: <%=entity%>, fd: Option[FetchDepth])(implicit session: Session): <%=entity%> = {
+		//TODO nog te genereren.
+			obj
+	}
+	
+<% String baserowArgs = tu.format(tu.getFieldsExc(superClass, O2M_FLD,VAR_FLD,DISC_FLD,OFD_FLD), "baseRow.%n", ",\n\t\t\t"); %>	
+<% String rowArgs = tu.format(tu.getFieldsExc(cc, O2M_FLD, VAR_FLD), "row.%n", ",\n\t\t\t"); %>	
+<% String varSetters = tu.format(tu.getFieldsExc(cc, O2M_FLD, VAL_FLD), "obj.%n = row.%n", "\n\t\t"); %>	
+
+	/*
+	 * This method is implictelly called from the baseclass, and uses both the baserow and its own row
+	 */
+	def <%=mapfromRow%>s(baseRow: <%=superClassname%>Row, row: <%=row%>, newId: Option[Long] = None): <%=entity%> = {
+//    val useId = if (newId.isDefined) newId else row.id
+		val obj = new <%=entity%>(<%=baserowArgs%>)
+    
+		<%=varSetters%>
+		obj
+	}	
+	
+<% } %>

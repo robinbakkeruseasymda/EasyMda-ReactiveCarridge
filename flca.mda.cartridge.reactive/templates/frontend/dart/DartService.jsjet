@@ -1,0 +1,28 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartService" %>
+<%@ include file="../jet-includes/dart-interface-init.jetinc" %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+
+class <%=classname%> extends <%=serviceBase%> {
+
+<% for (Method m : iu.getMethods()) { %>
+<%   String restMethod = (iu.isRestPostMethod(m)) ? "postData" : "getData"; %>
+<%	 String arguments = nu.join(iu.getArguments(m), ",");%>
+<%	 String params = "";%>
+<%	 for (int i=0; i < iu.getParameterCount(m); i++) { %>
+<%		 params += iu.getParameterName(m, i) ; %>
+<%		 if (iu.moreParameters(m,i)) { params += ", ";} %> 
+<%	 } %>
+<%   String s1 = params; if (iu.getParameterCount(m)>0) s1 += ", "; s1 += "Function callback"; %>  
+    void <%=m.getName()%>(<%=s1%>) { 
+<%   if (params.length() > 0) { %>
+       <%=restMethod%>("<%=m.getName()%>", <%=params%>, callback);
+<%   } else { %>
+       <%=restMethod%>("<%=m.getName()%>", null, callback);
+<%   } %>
+    }
+    
+<% } %>
+}

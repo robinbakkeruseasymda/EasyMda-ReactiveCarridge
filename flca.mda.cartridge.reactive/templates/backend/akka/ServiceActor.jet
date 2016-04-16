@@ -1,0 +1,59 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ServiceActor" %>
+<%@ include file="../jet-includes/java-interface-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-interface.jetinc" %>
+<% String srvfact = tplu.getClassName(Tid.SCALA_SERVICE_FACT.name()); %>
+<% impu.addImport("akka.actor.Actor");%>
+<% impu.addImport("akka.actor.Props");%>
+<% impu.addImport(cc);%>
+ 
+object <%=classname%> {
+  def props = Props[<%=classname%>]
+  def name = "<%=classname%>"
+  
+  case class VoidSuccess()
+  case class VoidFailure(errorMsg:String)
+  
+<% for (Method m : iu.getMethods()) { %>
+<%  String params = iu.getParameters(m); String returnType = iu.getReturn(m); 
+    boolean noargs = (iu.getParameterCount(m) == 0); %>
+<%  if (noargs) { %>
+  case object <%=nu.capName(m.getName())%>Req
+<%  } else { %>
+  case class <%=nu.capName(m.getName())%>Req(<%=params%>)
+<%  } %>    
+<%   if (!iu.isVoid(m)) { %>
+  case class <%=nu.capName(m.getName())%>Res(value:<%=returnType%>)
+<%   } %>
+  
+<% } %>
+}
+ 
+class <%=classname%> extends Actor {
+  import <%=classname%>._
+
+  import context._
+  
+  def receive: Receive = {
+<% for (Method m : iu.getMethods()) { %>
+<%  String arguments = nu.join(iu.getArguments(m), ","); 
+    String returnType = iu.getReturn(m); String returnParam = iu.getReturn(m);  
+    boolean noargs = (iu.getParameterCount(m) == 0); %>
+<%  if (noargs) { %>
+    case <%=nu.capName(m.getName())%>Req => {
+<%  } else { %>
+    case <%=nu.capName(m.getName())%>Req(<%=arguments%>) => {
+<%  } %>    
+<% if (iu.isVoid(m)) { %>
+      service.<%=m.getName()%>()
+<%   } else { %>
+    sender ! <%=nu.capName(m.getName())%>Res(service.<%=m.getName()%>(<%=arguments%>)) 
+<%   } %>
+   }
+<%}//for%>
+}
+  
+  val service = <%=srvfact%>.get
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

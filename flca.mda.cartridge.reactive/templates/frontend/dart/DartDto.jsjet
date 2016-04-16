@@ -1,0 +1,80 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*  " 
+class="DartDto" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+library <%=pck%>.<%=classname%>;
+  
+import '<%=dartlib%>';
+  
+class <%=entity%> extends Object with Observable {
+  //properties
+  List<int> ohc = [0];
+  String fd = null;
+<% for (Fw fw : tu.getFieldsExc(cc, SPECIAL_FLD)) { %>
+  <%=fw.typeName()%> <%=fw.name()%> = <%=fw.getDefaultValue()%>;
+<% }  %>
+  
+  // constructor & factories
+  <%=entity%>() {}
+
+  factory <%=entity%>.clone(<%=entity%> s) {
+    <%=entity%> r = new <%=entity%>();
+    r.ohc = s.ohc;
+    r.fd = s.fd;
+<% for (Fw fw : tu.getFieldsExc(cc, SPECIAL_FLD)) { %>
+    r.<%=fw.name()%> = s.<%=fw.name()%>;
+<% }  %>
+    return r;
+  }
+
+  factory <%=entity%>.fromJson(json) {
+    Map map = JSON.decode(json);
+    return new <%=entity%>.fromMap(map);
+  }
+
+  factory <%=entity%>.fromMap(map) {
+    <%=entity%> r = new <%=entity%>();
+    r.ohc = map['ohc'];
+    r.fd = map['fd'];
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%   if (fw.isEnum()) { %>
+    r.<%=fw.name()%> = <%=fw.typeName()%>.valueOf(map['<%=fw.name()%>']['value']);
+<%   } else { %>
+    r.<%=fw.name()%> = map['<%=fw.name()%>'];
+<%   } %>
+<% }  %>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD, O2O_FLD)) { %>
+    r.<%=fw.name()%> = new <%=fw.typeName()%>.fromMap(map['<%=fw.name()%>']);
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+    List _<%=fw.name()%>_list = map['<%=fw.name()%>'];
+    _<%=fw.name()%>_list.forEach((e) => r.<%=fw.name()%>.add(new <%=fw.typeName()%>.fromMap(e)));
+<% } %>
+    return r;
+  }
+
+  Map toJson() {
+    Map map = new Map();
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%   if (fw.isDate()) { %>
+    map['<%=fw.name()%>'] = DateUtils.dateToJson(this.<%=fw.name()%>);
+<%   } else { %>
+    map['<%=fw.name()%>'] = this.<%=fw.name()%>;
+<%   } %>
+<% }  %>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD, O2O_FLD)) { %>
+    map['<%=fw.name()%>'] = this.<%=fw.name()%>;
+<% } %>
+    //todo onetomany
+    
+    return map;
+  }
+
+  @override
+  String toString() {
+<% String tostr = ""; %>
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%   tostr += fw.name() + "=$" + fw.name() + ",";  %>
+<% } %>
+    return "<%=tostr%>";
+  }
+} 

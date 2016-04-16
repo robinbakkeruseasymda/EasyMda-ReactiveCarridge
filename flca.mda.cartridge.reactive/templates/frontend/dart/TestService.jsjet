@@ -1,0 +1,3 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartTestService" %>
+<%@ include file="../jet-includes/dart-interface-init.jetinc" %>

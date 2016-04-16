@@ -1,0 +1,32 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AkkaSettings" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<% String appcfg = tplu.getClassName(Tid.SCALA_APP_CONFIG.name());%>
+
+package <%=pck%>
+
+import java.util.concurrent.TimeUnit
+
+import com.typesafe.config.Config
+
+import akka.actor._
+
+import scala.concurrent.duration.FiniteDuration
+ 
+class <%=classname%> (config: Config, extendedSystem: ExtendedActorSystem) extends Extension {
+ 
+  object Http {
+    val Port = config.getInt(<%=appcfg%>.APP_NAME  + ".http.port")
+    val Host = config.getString(<%=appcfg%>.APP_NAME  + ".http.host")
+  }
+ 
+  val askTimeout = FiniteDuration(config.getMilliseconds(<%=appcfg%>.APP_NAME  + "ask-timeout"), TimeUnit.MILLISECONDS)
+}
+ 
+object <%=classname%> extends ExtensionId[<%=classname%>] with ExtensionIdProvider {
+  override def lookup = <%=classname%>
+  override def createExtension(system: ExtendedActorSystem) = new <%=classname%>(system.settings.config, system)
+ 
+  def apply(context: ActorContext): <%=classname%> = apply(context.system)
+}

@@ -1,0 +1,21 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* " 
+class="DartAppConstants" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+abstract class <%=classname%> {
+  
+  static const HOST_PORT = 8000;
+  static const PROXY_PORT = 8888;
+  
+  static const RUN_MODE_PROD = 0; //use the backend url
+  static const RUN_MODE_LOCAL = 1; //use generated json files under resources/json
+  static const RUN_MODE_TEST = 2; //use a proxy server to overcome cors headers (ex: corsa)
+ 
+  static const RUN_MODE = RUN_MODE_LOCAL;
+   
+  static const EVENT_MENU_CLICK = "EVENT_MENU_CLICK";
+  static const TEST_SERVICE_ACTION = "TEST_SERVICE_ACTION"; 
+ 
+<% for (String dartconst : tu.getAllDartConstants()) { %>
+   static const <%=dartconst%> = "<%=dartconst%>"; 
+<% } %>
+}

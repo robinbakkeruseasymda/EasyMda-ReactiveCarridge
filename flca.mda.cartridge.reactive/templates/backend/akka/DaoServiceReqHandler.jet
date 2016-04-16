@@ -1,0 +1,89 @@
+<%@ jet package="backend.akka"	
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*	flca.mda.codegen.helpers.* reactive.* "
+class="DaoServiceReqHandler" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% impu.addImport("scala.concurrent.*");%>
+<% impu.addImport("scala.concurrent.ExecutionContext.Implicits.global");%>
+<% impu.addImport("scala.concurrent.duration.*");%>
+<% impu.addImport("scala.util.Failure");%>
+<% impu.addImport("scala.util.Success");%>
+<% impu.addImport("scala.language.postfixOps");%>
+<% impu.addImport("akka.actor.*");%>
+<% impu.addImport("akka.event.*");%>
+<% impu.addImport("akka.pattern.ask");%>
+<% impu.addImport("akka.http.model.*");%>
+<% impu.addImport("akka.stream.FlowMaterializer");%>
+<% impu.addImport("akka.stream.scaladsl.*");%>
+<% impu.addImport("akka.util.Timeout");%>
+<% impu.addImport("akka.event.LoggingAdapter");%>
+<% impu.addTemplateImport(Tid.SCALA_DAO_SERVICE_ACTOR.name()); %>
+<% impu.addImport(cc);%>
+<% String actor = tplu.getClassName(Tid.SCALA_DAO_SERVICE_ACTOR.name()); %>
+<% String actorPck = tplu.getPackage(Tid.SCALA_DAO_SERVICE_ACTOR.name());%>
+<% impu.addImport(actorPck + "." + actor + ".*");%>
+<% String jsonutils = tplu.getClassName(Tid.SCALA_JSONUTILS.name());%>
+<% boolean mustGenerate = tu.generateRestService(cc);%>
+<% String actorInstance = nu.uncapName(actor); %>
+<% if (!mustGenerate) { return null; } %>
+ 
+class <%=classname%>	{
+	
+	implicit val system = ActorSystem("<%=classname%>")
+	implicit val mat = FlowMaterializer()
+	val logger = Logging.getLogger(system, this);
+	
+	val <%=actorInstance%> = system.actorOf(<%=actor%>.props, <%=actor%>.name)
+	
+	def find<%=entity%>(req:HttpRequest): Future[HttpResponse] = {
+		logger.debug("start handle find<%=entity%> ....")
+		implicit val timeout = Timeout(30 seconds)
+	
+		val p = Promise[HttpResponse]()
+		val future = tstaDaoSrvActor.ask(Find<%=entity%>Req).mapTo[Find<%=entity%>Res]
+		future onComplete {
+				case Success(Find<%=entity%>Res(value)) => p success HttpResponse(entity=JsonUtils.toJson(value)) 
+				case Failure(t) => println("fout"); p success HttpResponse(500, entity=t.getMessage)
+		}
+		p.future
+	}
+	
+	def retrieve<%=entity%>(req: HttpRequest): Future[HttpResponse] = {
+		logger.debug("start handleRetrieve<%=entity%> ....")
+		implicit val timeout = Timeout(30 seconds)
+	
+		val p = Promise[HttpResponse]()
+		val id = JsonUtils.getReqParamAsInt(req, "id")
+		if (id.isDefined) {
+			val future = tstaDaoSrvActor.ask(Retrieve<%=entity%>Req(id.get)).mapTo[Retrieve<%=entity%>Res]
+			future onComplete {
+					case Success(Retrieve<%=entity%>Res(value)) => p success HttpResponse(entity=JsonUtils.toJson(value)) 
+					case Failure(t) => println("fout"); p success HttpResponse(500, entity=t.getMessage)
+			}
+		} else {
+			p success HttpResponse(500, entity="retrieveTsta requires parameter id")
+		}
+		p.future
+	}
+	
+	def save<%=entity%>(req: HttpRequest): Future[HttpResponse] = {
+		logger.debug("start handleSave<%=entity%> ....")
+		implicit val timeout = Timeout(30 seconds)
+		
+		val p = Promise[HttpResponse]()		
+		val json = JsonUtils.getPostData(req)
+		if (json != null) {
+			val tsta: <%=entity%> = JsonUtils.fromJson[<%=entity%>](json)
+			val future = tstaDaoSrvActor.ask(Save<%=entity%>Req(tsta)).mapTo[Save<%=entity%>Res]
+			future onComplete {
+					case Success(Save<%=entity%>Res(value)) => p success HttpResponse(entity=JsonUtils.toJson(value)) 
+					case Failure(t) => println("fout"); p success HttpResponse(500, entity=t.getMessage)
+			}
+			future.map { result => HttpResponse(entity=JsonUtils.toJson(result.value)) }
+		} else {
+			p success HttpResponse(500, entity="saveTsta requires POST data")		
+		}
+		p.future
+	}
+} 
+<% importStringBuffer.insert(importInsertionPoint, impu.computeSortedImports());%>

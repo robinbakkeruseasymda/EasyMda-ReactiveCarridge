@@ -1,0 +1,7 @@
+<%@ include file="./snippet-init.jetinc"%>
+<% Object args[] = (Object[]) argument; %>
+<% Fw field = (Fw) args[0]; %>
+<% String uncapName = nu.uncapName(field); %>
+<% String capName = nu.capName(field); %>
+<% String fldtyp = tu.getTypeName(field); %>
+<% String appcontext = tplu.getAppClassName(Tid.SCALA_APP_CONTEXT.name());%>

@@ -1,0 +1,70 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.* "
+class="DartDetailForm" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.Gui.class)) return ""; %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+ 
+@CustomTag('<%=entityLC%>-form')
+class <%=classname%> extends PolymerElement with AbstractForm {
+  
+  @override ShadowRoot get formRoot => shadowRoot;
+
+<% String fieldIds = ""; %>
+<% if (!tu.hasExplicitId(cc) && !isSubClass) {%>
+  <% fieldIds += "\"#id_" + idname + "\","; %>
+<% } %>
+<% for (Fw fw : tu.getAllFields(cc)) { %>
+<% String fldname = fw.name(); fieldIds += "\"#id_" + fldname +"\","; %> 
+<% }  %>  
+  @override List<String> get fieldIds =>  [<%=nu.trimRight(fieldIds,",")%>];
+  
+  <%=entity%> _<%=uncapname%>;
+  
+  @observable 
+  <%=entity%> get <%=uncapname%> => _<%=uncapname%>;
+  
+  void set <%=uncapname%>(<%=entity%> val) {
+    _<%=uncapname%> = val;
+    updateView();
+  }
+  
+  <%=classname%>.created(): super.created() {} 
+  
+  @override <%=entity%> updateModel() {
+    <%=entity%> r = new <%=entity%>.clone(<%=uncapname%>);
+
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<% String fldname = fw.name(); %>
+<%   if (fw.isEnum()) { %>
+    r.<%=fldname%> = <%=fw.typeName()%>.values[getSelectedIndex('#id_<%=fldname%>')];
+<%   } else { %>
+    r.<%=fldname%> = getValue('#id_<%=fldname%>');
+<%   } %>
+<% }  %>    
+    return r;
+  }
+  
+  @override void updateView() {
+<% if (!tu.hasExplicitId(cc) && !isSubClass) {%>
+  setValue('#id_<%=idname%>', <%=uncapname%>.<%=idname%>);  
+<% } %>  
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<% String fldname = fw.name(); %>
+<%   if (fw.isEnum()) { %>
+    setCombobox("#id_<%=fldname%>", <%=uncapname%>.<%=fldname%>, <%=fw.typeName()%>.values);
+<%   } else { %>
+    setValue('#id_<%=fldname%>', <%=uncapname%>.<%=fldname%>);  
+<%   } %>
+<% }  %>
+  }
+
+  // observable Maps to populate combobox(s)
+<% for (Fw fw : tu.getFieldsInc(cc, ENUM_FLD)) { %>
+<% String fldname = fw.name(); %>
+    @observable Map get <%=fldname%>_values => <%=fw.typeName()%>.selectMap;
+<% }  %>      
+  
+} 
+

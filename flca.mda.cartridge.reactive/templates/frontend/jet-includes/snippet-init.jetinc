@@ -1,0 +1,4 @@
+<% NameUtils nu = new NameUtils();%>
+<% TemplateUtils tplu = new TemplateUtils();%>
+<% AppUtils au = new AppUtils(); %>
+<% InterfaceUtils iu = new InterfaceUtils(); %>

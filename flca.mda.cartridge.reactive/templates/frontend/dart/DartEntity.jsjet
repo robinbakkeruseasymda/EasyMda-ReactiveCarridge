@@ -1,0 +1,92 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*  " 
+class="DartEntity" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+ 
+class <%=entity%> extends Object with Observable {
+  //properties
+  String fd = null;
+  <%=tu.format(tu.getAllFields(cc), "%t %n = %d;", "\n  ")%>
+  
+  // constructor & factories
+  <%=entity%>() {}
+
+  factory <%=entity%>.clone(<%=entity%> s) {
+    <%=entity%> r = new <%=entity%>();
+    r.fd = s.fd;
+    <%=tu.format(tu.getAllFields(cc), "r.%n = s.%n;", "\n    ")%>
+    return r;
+  }
+
+  factory <%=entity%>.fromJson(json) {
+    Map map = JSON.decode(json);
+    return new <%=entity%>.fromMap(map);
+  }
+
+  factory <%=entity%>.fromMap(map) {
+    <%=entity%> r = new <%=entity%>();
+    r.fd = map['fd'];
+<% if (!tu.hasExplicitId(cc) && !isSubClass) {%>
+    r.<%=idname%> = map['<%=idname%>'];
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%   if (fw.isEnum()) { %>
+    r.<%=fw.name()%> = <%=fw.typeName()%>.valueOf(map['<%=fw.name()%>']['value']);
+<%   } else if (fw.isDate()) { %>
+    r.<%=fw.name()%> = DateUtils.varToDate(map['<%=fw.name()%>']);
+<%   } else { %>
+    r.<%=fw.name()%> = map['<%=fw.name()%>'];
+<%   } %>
+<% }  %>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD, O2O_FLD)) { %>
+    var _<%=fw.name()%> = map['<%=fw.name()%>'];
+<%    if (fw.isSimple()) { %>
+    if (_<%=fw.name()%> != null) {
+       r.<%=fw.name()%> = _<%=fw.name()%>;
+    }
+<%    } else { %>
+    if (_<%=fw.name()%> != null) {
+       r.<%=fw.name()%> = new <%=fw.typeName()%>.fromMap(_<%=fw.name()%>);
+    }
+<%    } %>
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) { %>
+    List _<%=fw.name()%>_list = map['<%=fw.name()%>'];
+    if (_<%=fw.name()%>_list != null) {
+      _<%=fw.name()%>_list.forEach((e) => r.<%=fw.name()%>.add(new <%=fw.genericTypeName()%>.fromMap(e)));
+    }
+<% } %>
+    return r;
+  }
+
+  Map toJson() {
+    Map map = new Map();
+<% if (!tu.hasExplicitId(cc) && !isSubClass) {%>
+    map['<%=idname%>'] = this.<%=idname%>;
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%   if (fw.isDate()) { %>
+    map['<%=fw.name()%>'] = DateUtils.dateToJson(this.<%=fw.name()%>);
+<%   } else { %>
+    map['<%=fw.name()%>'] = this.<%=fw.name()%>;
+<%   } %>
+<% }  %>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD, O2O_FLD)) { %>
+    map['<%=fw.name()%>'] = this.<%=fw.name()%>;
+<% } %>
+    //todo onetomany
+    
+    return map;
+  }
+
+  @override
+  String toString() {
+<% String tostr = ""; %>
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<%    tostr += fw.name() + "=$" + fw.name() + ",";  %>
+<% } %>
+    return "<%=tostr%>";
+  }
+} 

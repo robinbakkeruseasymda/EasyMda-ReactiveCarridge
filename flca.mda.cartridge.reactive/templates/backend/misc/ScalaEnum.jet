@@ -1,0 +1,24 @@
+<%@ jet package="backend.misc"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEnum" %>
+<%@ include file="../jet-includes/jetarg.jetinc" %>
+<% ScalaTypeUtils tu = new ScalaTypeUtils();%>
+<% NameUtils nu = new NameUtils();%>
+<% Class enumClass = arg.getElementClass(); %>
+<% String pck = nu.getCurrentPackage();%>
+<% String classname = nu.getCurrentClassname();%>
+package <%=pck%>
+ 
+object <%=classname%> extends Enumeration() {
+  type <%=classname%> = Value
+<% for (String item : tu.getEnumItems(enumClass)) { %>
+  val <%=item%> = Value("<%=item%>")
+<% } %>	
+ 
+  def parse(name: String) = {
+    <%=classname%> .values.filter(_.toString == name).headOption
+  }
+  def parse(name: Option[String]) = {
+    <%=classname%> .values.filter(_.toString == name.get).headOption
+  }
+}

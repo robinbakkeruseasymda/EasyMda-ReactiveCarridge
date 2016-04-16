@@ -1,0 +1,11 @@
+<%@ jet package="backend.common"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="Profile" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+package <%=pck%>
+ 
+import scala.slick.driver.JdbcProfile
+
+trait Profile {
+  val profile: JdbcProfile
+}

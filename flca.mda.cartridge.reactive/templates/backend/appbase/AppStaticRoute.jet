@@ -1,0 +1,10 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AppStaticRoute" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.util.Failure
+import scala.util.Success
+ 

@@ -1,0 +1,12 @@
+<%@ jet package="backend.common"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="Logger" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+package <%=pck%>
+ 
+import org.slf4j.LoggerFactory
+import scala.slick.util.SlickLogger
+  
+trait Logger {
+  lazy val logger = new SlickLogger(LoggerFactory.getLogger("<%=cc.getName()%>"))
+}

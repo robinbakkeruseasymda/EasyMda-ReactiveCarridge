@@ -1,0 +1,34 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaTestEntityMappers" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% impu.addImport("scala.slick.util.SlickLogger");%>
+<% impu.addImport("org.junit.runner.RunWith");%>
+<% impu.addImport("org.scalatest.junit.JUnitRunner");%>
+<% impu.addImport("scala.slick.jdbc.JdbcBackend.Database");%>
+<% impu.addImport("org.scalatest.FunSuite");%>
+<% impu.addImport("org.scalatest.BeforeAndAfterEach");%>
+<% String mock = tplu.getClassName(Tid.SCALA_ENTITY_MOCK.name());%>
+<% String jsonutils = tplu.getClassName(Tid.SCALA_JSONUTILS.name());%>
+<% impu.addImport(cc);%>
+  
+@RunWith(classOf[JUnitRunner])
+class <%=classname%> extends FunSuite {
+
+  test("<%=uncapname%> to json") {
+    val <%=uncapname%>1 = <%=mock%>.makeRandom()
+    val json1 = <%=jsonutils%>.toJson(<%=uncapname%>1)
+    println(json1)
+    val <%=uncapname%>2 = <%=jsonutils%>.fromJson[<%=entity%>](json1)
+    println(<%=uncapname%>1)
+    println(<%=uncapname%>2)
+    assert(<%=uncapname%>1.hashCode === <%=uncapname%>2.hashCode)
+  }
+  
+  test("<%=uncapname%> row hashcode") {
+  }
+
+}
+
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

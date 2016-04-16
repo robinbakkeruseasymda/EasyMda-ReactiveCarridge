@@ -1,0 +1,20 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ServiceMock" %>
+<%@ include file="../jet-includes/java-interface-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-interface.jetinc" %>
+<% String srvintf = tplu.getClassName(Tid.SCALA_SERVICE_INTF.name()); %>
+
+object <%=classname%> extends <%=srvintf %> {
+ 
+<%for (Method m : iu.getMethods()) { %>
+<%  String arguments = nu.join(iu.getArguments(m), ","); String params = iu.getParameters(m);
+    String returnType = iu.getReturn(m); String returnParam = iu.getReturn(m);  %>
+
+	def <%=m.getName()%>(<%=params%>) : <%=returnParam%>  = {
+		//TODO add your implementation
+		<%= (iu.isVoid(m)) ? "" : "null"%>
+	}
+<%}//for%>
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

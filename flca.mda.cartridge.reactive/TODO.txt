@@ -1,0 +1,51 @@
+flca.mda.test.webapp ipv flca.mda.test.target 
+spray cors headers
+spray login 
+plugin builden en testen
+plugin voor generate projects
+test junit test mappers, wordt to/fromRow getest ?
+@CrudFind (generate=true publish=false
+ManyToMany
+Qeuryies parallel uitvoeren
+var's niet in (case) class param list opnemen
+copy van een row kijkt nu niet naar newId !
+
+FieldWrapper.getActualType en getType geeft meest voor de hand liggende
+vervang TypeUtils.getGenericType door FieldWrapper.getType 
+
+in tste.dart : 
+ if (_tstcId != null) {
+      r.tstcId = new int.fromMap(_tstcId);
+ }
+
+
+in TstService :
+   void pingMe(aMessage1, aMessage2, Function callback) { 
+       getData("pingMe", aMessage1, aMessage2, callback);  <- maar 3 params mogelijk !
+    }
+    
+In TstbDaoBase is dit overbodig:
+val result2 = retrieveTstaNestedObjects(result1, fd)
+bovendien: val result2:Tstb  is duidelijker 
+    
+==========================================
+OK : SourceForge
+OK : junit test generate curl cmd
+OK "@Crud (generate= publish=
+ok : ITemplate addHooks(ITemplateHook) waarin je meerdere postprocessor kan toevoegen
+ok :AppConstants
+ok : spray static route
+OK: set van ohc, om ook collection bij te houden
+OK: test service met dto
+OK: class entity aanpassen met (val xxx, .. var yy...)
+OK: test deep save and deep retrieve (mbv Tstf)
+OK: findAllXxx vervangen door findXxx( [filter], [fetchDepth] )
+OK: random utils
+OK: appconfig anders indelen met modus vooraan (dev { ds { username 
+OK: ook property fetchDepth bijhouden
+OK: Behalve nested object ook id bijhouden
+OK:In XxxRow voor ManyToOne ipv picture , pictureId
+OK: junit asserts inbouwen (bijv update a field)
+OK: in daoBase remove toevoegen
+OK isDirty = false zetten
+OK in saveXxx : obj = if (isNewItem) obj else if (mustUpdate(obj)) updateFinProd(obj) else obj

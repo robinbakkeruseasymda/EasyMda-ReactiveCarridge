@@ -1,0 +1,22 @@
+<%@ jet package="snippets.akka" 
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.* mda.annotation.crud.* "
+class="DaoCrudServiceImplSnippet" %>
+<%@ include file="../snippet-crudservice-init.jetinc"%>
+
+<% if (CrudOperation.SAVE.equals(crudoper)) { %>
+  override def find<%=entity%>) = {
+    db withSession { implicit session:Session =>
+      dal.find<%=entity%>
+    }
+  }
+    
+<% } else if (CrudOperation.RETRIEVE.equals(crudoper)) { %>
+    
+<% } else if (CrudOperation.FIND_ALL.equals(crudoper)) { %>
+    
+<% } else if (CrudOperation.REMOVE.equals(crudoper)) { %>
+
+<% } else if (CrudOperation.SEARCH.equals(crudoper)) { %>
+    
+<% } %>
+

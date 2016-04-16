@@ -1,0 +1,14 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*	" 
+class="DartBrowseFormHtml" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.Gui.class)) return ""; %>
+
+<link rel="import" href="<%=pubpath%>/p-grid.html" >
+
+<polymer-element name="<%=entityLC%>-browse" >
+  <template>
+    <p-grid rows="{{records}}" columns="{{columns}}" clickEdit="{{clickEdit}}"></p-grid>
+  </template>
+  <script type="application/dart" src="<%=entityLC%>_browse.dart"></script>
+</polymer-element> 
+

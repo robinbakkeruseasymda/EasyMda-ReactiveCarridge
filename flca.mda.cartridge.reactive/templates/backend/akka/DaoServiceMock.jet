@@ -1,0 +1,32 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="DaoServiceMock" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String srvintf = tplu.getClassName(Tid.SCALA_DAO_SERVICE_INTF.name()); %>
+<% String srvimpl = tplu.getClassName(Tid.SCALA_DAO_SERVICE_IMPL.name()); %>
+<% String mock = tplu.getClassName(Tid.SCALA_ENTITY_MOCK.name()); %>
+<% impu.addImport(cc);%>
+  
+object <%=classname %> extends <%=srvintf %> {
+  
+  override def find<%=entity%>() : List[<%=entity%>] = {
+    List(<%=mock%>.makeRandom(), <%=mock%>.makeRandom(), <%=mock%>.makeRandom())
+  }
+ 
+  override def retrieve<%=entity%>(<%=idname%>:<%=idtype%>): Option[<%=entity%>] = {
+    Some(<%=mock%>.makeRandom())
+  }
+ 
+  override def save<%=entity%>(<%=uncapname%>:<%=entity%>): <%=entity%> = {
+     <%=uncapname%>
+  }
+  
+  override def delete<%=entity%>(<%=idname%>:<%=idtype%>): Unit = {
+    println("deleted <%=entity%> : <%=idname%> ...")
+  }
+ 
+<% for (CrudMethod cm : iu.getAllCrudMethods()) { //TODO %>
+<% } %> 
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

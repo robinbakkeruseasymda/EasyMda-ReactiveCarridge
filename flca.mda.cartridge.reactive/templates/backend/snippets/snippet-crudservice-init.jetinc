@@ -1,0 +1,8 @@
+<%@ include file="./snippet-init.jetinc"%>
+<% Object args[] = (Object[]) argument; %>
+<% CrudMethod crudmethod = (CrudMethod) args[0]; %>
+<% String entity = crudmethod.getEntity().getSimpleName(); %>
+<% CrudOperation crudoper = crudmethod.getCrudOper(); %>
+<% Class<?> crudent = crudmethod.getEntity(); %>
+<% String entityName = tplu.getClassName(crudent, Tid.SCALA_ENTITY.name()); %> 
+<% String pkType =  tu.getIdTypeName(crudent); %>

@@ -1,0 +1,53 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AppMain" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+ 
+<% impu.addImport("akka.actor.*");%>
+<% impu.addImport("akka.stream.FlowMaterializer");%>
+<% impu.addImport("akka.http.Http");%>
+<% impu.addImport("akka.http.model.*");%>
+<% impu.addImport("akka.http.model.HttpMethods.*");%>
+<% impu.addImport("akka.stream.FlowMaterializer");%>
+<% impu.addImport("scala.slick.jdbc.JdbcBackend.Database");%>
+<% String appstart = tplu.getClassName(Tid.SCALA_APP_STARTUP.name());%>
+<% String appcfg = tplu.getClassName(Tid.SCALA_APP_CONFIG.name());%>
+<% String reception = tplu.getClassName(Tid.SCALA_APP_ROUTE.name());%>
+ 
+object <%=classname%> extends App {
+	implicit val system = ActorSystem("reactive")
+	implicit val materializer = FlowMaterializer()
+  
+	val ds = <%=datasource%>.datasource
+	var dal = new <%=datastores%>(<%=datasource%>.driver)
+	val db = Database.forDataSource(ds)
+	
+	Console.println("starting <%=classname%> " + (args mkString ", "))
+	startup
+	
+	val serverBinding = Http(system).bind(interface = "localhost", port = 8000)
+	
+	serverBinding.connections.foreach { connection => 
+		//println("Accepted new connection from " + connection.remoteAddress)
+		connection handleWithAsyncHandler <%=reception%>.route
+	}
+	
+	Console.println("waiting for request pn localhost:8000")
+	
+	def startup() = {
+		setupDatabase(<%=datasource%>.dbType, dal, db)
+		<%=appstart%>.initialize
+	}
+	
+	def setupDatabase(name: String, dal: <%=datastores%>, db: Database) {
+		import dal._
+		import dal.profile.simple._
+		println("Running test against " + name)
+		db withSession { implicit session: Session =>
+			if (<%=appcfg%>.dropTables) {dal.drop}
+			if (<%=appcfg%>.createTables) {dal.create}
+		}
+	}
+}
+<% importStringBuffer.insert(importInsertionPoint, impu.computeSortedImports());%>

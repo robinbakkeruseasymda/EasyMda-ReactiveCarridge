@@ -1,0 +1,38 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="DataStores" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+
+<% impu.addImport("scala.slick.driver.JdbcProfile");%>
+<% impu.addImport("scala.slick.driver.H2Driver");%>
+<% impu.addImport("scala.slick.driver.SQLiteDriver");%>
+<% impu.addImport("scala.slick.util.SlickLogger");%>
+<% impu.addImport("org.slf4j.LoggerFactory");%>
+<% String rowmapper = tplu.getClassName(Tid.SCALA_ROWMAPPERS.name()); %>
+<% impu.addTemplateImport(Tid.SCALA_SLICK_PROFILE.name());%>
+/**
+ * The <%=datastores%> Layer contains all components and a profile
+ */
+<% String daoMixins = tu.getAllDaoMixins(); %>
+<% String daoQueries = tu.getAllDaoQueries(); %>
+
+class <%=classname%>(override val profile: JdbcProfile) extends Profile
+   <%=daoMixins%>
+   with <%=rowmapper%> {
+  
+   import profile.simple._
+  
+	override lazy val logger = LoggerFactory.getLogger("<%=pck%>.<%=classname%>")
+  
+   // helper method to create all tables
+   def create(implicit session:Session): Unit = {
+     (<%=daoQueries%>).create 
+   }
+  
+   // helper method to drop all tables
+   def drop(implicit session:Session): Unit = {
+    (<%=daoQueries%>).drop 
+   }
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

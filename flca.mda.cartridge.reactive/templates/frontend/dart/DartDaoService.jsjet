@@ -1,0 +1,23 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartDaoService" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.RestService.class)) return ""; %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+
+class <%=classname%> extends <%=serviceBase%> {
+
+  void findAll<%=entity%>(Function callback) {
+    getData("find<%=entity%>", null, callback);
+  }
+  
+  void retrieve<%=entity%>(String id, Function callback) {
+    var args = "/" + id;
+    getData("retrieve<%=entity%>", args, callback);
+  }
+
+  void save<%=entity%>(<%=entity%> data, Function callback) {
+    postData("save<%=entity%>", data, callback);
+  }
+}

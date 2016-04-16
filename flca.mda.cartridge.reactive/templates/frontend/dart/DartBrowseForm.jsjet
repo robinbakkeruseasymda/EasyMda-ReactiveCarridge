@@ -1,0 +1,26 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*	" 
+class="DartBrowseForm" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.Gui.class)) return ""; %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+  
+@CustomTag('<%=entityLC%>-browse')
+class <%=classname%> extends PolymerElement {
+  
+  @published @observable List columns;
+  @published @observable List records;
+  @published @observable Function clickEdit;
+  
+  <%=classname%>.created(): super.created() {
+    this.columns = [
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<% String fldname = fw.name(); String capName=nu.capName(fw.name()); %>
+<% String typ = tu.getDartBrowseType(fw.type()); %>
+<% String fieldFormat = fw.isDate() ? ",formatter: formatDate" : ""; %>
+      {"key": "<%=fldname%>", "title": "<%=capName%>", "type": "<%=typ%>"},
+<% } %>    
+    ];    
+  }
+} 

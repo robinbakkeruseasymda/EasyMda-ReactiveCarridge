@@ -1,0 +1,19 @@
+<%@ include file="../../jetarg.jetinc" %>
+<% DartTypeUtils tu = new DartTypeUtils();%>
+<% ScalaInterfaceUtils iu = new ScalaInterfaceUtils(); %> 
+<% NameUtils nu = new NameUtils();%>
+<% TemplateUtils tplu = new TemplateUtils();%>
+<% FilenameHelper fnh = new FilenameHelper(); %>
+<% AppUtils au = new AppUtils(); %>
+<% Class intf = arg.getElementClass(); %>
+<% String classname = nu.getCurrentClassname();%>
+<% String pck = nu.getCurrentPackage();%>
+<% String uncapname = nu.uncapName(classname); %>
+<% Class cc = tu.currentClass(); %>
+<% String idname = tu.getIdName(cc); String idtype = tu.getIdTypeName(); %>
+<% String serviceImpl = tplu.getClassName(Tid.DART_SERVICE_IMPL.name());%>
+<% String serviceImplDir = tplu.getPackage(Tid.DART_SERVICE_IMPL.name());%>
+<% String constantsName = tplu.getClassName(Tid.DART_APP_CONSTANTS.name());%>
+<% String serviceBase = tplu.getClassName(Tid.DART_APP_SERVICE_BASE.name());%>
+<% String appname = au.getApplicationName(); %>
+<% String dartlib = fnh.getRelativeToRootPath(intf, arg.getTemplate()) + appname.toLowerCase() + "_library.dart"; %>

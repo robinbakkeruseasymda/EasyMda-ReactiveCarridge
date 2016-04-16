@@ -1,0 +1,31 @@
+<%@ jet package="backend.misc"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="Dto" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% FwSelectType[] allOutputOpts = new FwSelectType[] {ID_FLD, VAR_FLD}; %>
+<% String basepck = tplu.getPackage(Tid.SCALA_BASECLASS.name());%>	
+<% String baseclass = tplu.getClassName(Tid.SCALA_BASECLASS.name());%>	
+<% impu.addImport(basepck + ".FetchDepth");%>
+<% impu.addImport(basepck + "." + baseclass);%>
+
+/**
+ generated class
+*/
+<% List<Fw> fields = tu.getFieldsInc(cc, VAL_FLD); %>
+<% fields = tu.filterOut(cc, fields, SPECIAL_FLD); %>
+<% List<String> valList = new ArrayList<String>(); %>
+<% for (Fw fw : fields) { valList.add(fw.format("%v %n:%o[%t]=%d, ")); } %>
+<% String classVals = nu.join(valList, "\n\t"); %>
+class <%=classname%>(<%=classVals%>) {
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD), "private %v _%n:%o[%t]=%d", "\n\t")%>
+	
+	private var _dirty:Boolean = false
+	
+	// getters & setters
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD), "def %n = _%n", "\n\t")%>
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD), "def %n_= (value:%o[%t]) = {_%n=value; _dirty=true;}", "\n\t")%>
+	def dirty = _dirty
+	
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

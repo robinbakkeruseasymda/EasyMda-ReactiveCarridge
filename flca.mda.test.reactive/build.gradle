@@ -1,0 +1,77 @@
+
+apply from: "../flca.easymda.plugin/gradle-common/common.gradle"
+
+archivesBaseName = "easymda.test.reactive"
+
+sourceSets {
+   main {
+      java {
+         srcDirs = ["src/main/java", "src/test/java" ]
+      }
+   }
+   
+   test {
+        java {
+            srcDir "src/test/java"
+        }
+        resources {
+            srcDir "src/main/resources"
+        }
+   
+    }   
+}
+
+dependencies {
+	compile "commons-lang:commons-lang:2.6",
+		"jexcelapi:jxl:2.6",
+		"joda-time:joda-time:2.0",
+		"quartz:quartz:1.5.2",
+		"commons-logging:commons-logging:1.1.1",
+		"cache:CacheDB:1.0",
+		"berkeleydb:je:3.2.76",
+		"javax.servlet:servlet-api:2.5",
+		"org.dspace.dependencies:dspace-perst:4.21",
+		"antlr:antlr:2.7.7",
+		"jboss:jboss-transaction:4.2.2.GA",
+		"dom4j:dom4j:1.6.1",
+		"com.fasterxml:classmate:0.5.4",
+		"junit:junit:4.9",
+		"com.google.inject:guice:4.0",
+		"com.jolbox:bonecp:0.7.1.RELEASE",
+		"ch.qos.logback:logback-core:1.0.7",
+		"ch.qos.logback:logback-classic:1.0.7",
+		"javax:javaee-api:6.0" ,
+		"easymda:FlcaFrwBackend:${easymda_version}",
+		"easymda:FlcaFrwCommon:${easymda_version}",
+		"easymda:easymda.common.api:${easymda_version}",
+		"easymda:flca.easymda.generator:${easymda_version}",
+		"easymda:easymda.cartridge.reactive:${easymda_version}",
+		"eclipse-plugin:org.eclipse.jdt.core:3.10.2",
+		"eclipse-plugin:org.eclipse.core.resources:3.9.1",
+		"eclipse-plugin:org.eclipse.equinox.common:3.6.200",
+		"eclipse-plugin:org.eclipse.swt:3.103.2",
+		"eclipse-plugin:org.eclipse.emf.codegen:2.10.0",
+		"eclipse-plugin:org.eclipse.core.commands:3.6.100",
+		"eclipse-plugin:org.eclipse.ui.ide:3.10.2",
+		"eclipse-plugin:org.eclipse.ui.workbench:3.106.2",
+		"eclipse-plugin:org.eclipse.core.runtime:3.10.0",
+		"eclipse-plugin:org.eclipse.core.jobs:3.6.1",
+		"eclipse-plugin:org.eclipse.core.contenttype:3.4.200"
+		    
+    testCompile group: "junit", name: "junit", version: "4.+"
+}
+
+test {
+	useJUnit()
+
+	
+	testSrcDirs = ["src-test" ]
+	
+    systemProperties "property": "value"
+    
+    include "test/api/**"
+    
+    //makes the standard streams (err and out) visible at console when running tests
+  	testLogging.showStandardStreams = true
+}
+

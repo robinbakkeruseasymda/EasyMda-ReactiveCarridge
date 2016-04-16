@@ -1,0 +1,32 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartLeftTree" %>
+<%@ include file="../jet-includes/dart-app-init.jetinc" %>
+library <%=classname%>;
+ 
+import '../<%=dartlib%>';
+
+@CustomTag('left-tree')
+class LeftTree extends PolymerElement {
+
+<% String srvmethods = ""; String daomethods = "";%>
+<% for (String srv : tu.getAllServiceMethods()) {  srvmethods += "'" + srv + "',"; } %>
+<% for (Class clz: tu.getAllModelEntities()) {  %>
+<%   if (tu.hasAnnotation(clz, mda.annotation.RestService.class)) daomethods += "'" + clz.getSimpleName() + "',"; %>
+<% } %>
+
+  static List sServiceMethods = toObservable([<%=nu.trimRight(srvmethods,",")%>]);
+  static List sDaoMethods = toObservable([<%=nu.trimRight(daomethods,",")%>]);
+  
+  List serviceMethods = sServiceMethods;
+  List daoMethods = sDaoMethods;
+  
+  void handleClick(MouseEvent e) {
+    ButtonElement btn = e.currentTarget;
+    var cmd = btn.text;
+    Pubsub.publish(<%=appConstants%>.EVENT_MENU_CLICK, cmd);
+  }
+  
+  LeftTree.created() : super.created() {
+  }
+
+}

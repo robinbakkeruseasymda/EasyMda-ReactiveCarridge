@@ -1,0 +1,46 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* flca.mda.api.util.* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* " 
+class="DartEnum" %>
+<%@ include file="../../jetarg.jetinc" %>
+<% DartTypeUtils tu = new DartTypeUtils();%>
+<% NameUtils nu = new NameUtils();%>
+<% AppUtils au = new AppUtils(); %>
+<% FilenameHelper fnh = new FilenameHelper(); %>
+<% String appname = au.getApplicationName(); %>
+<% String pck = nu.getCurrentPackage();%>
+<% String classname = nu.getCurrentClassname();%>
+<% Class enumClass = arg.getElementClass(); String clsname = enumClass.getSimpleName(); %>
+<% String valuesString = ""; %>
+<% String dartlib = fnh.getRelativeToRootPath(enumClass, arg.getTemplate()) + appname.toLowerCase() + "_library.dart"; %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+  
+class <%=clsname%> extends Enum<String> {
+ 
+  const <%=clsname%>(String val): super(val);
+ 
+<% for (String item : tu.getEnumItems(enumClass)) { %>
+  static const <%=clsname%> <%=item%> = const <%=clsname%>('<%=item%>'); 
+<% } %>	
+
+<% for (String item : tu.getEnumItems(enumClass)) { %>
+<%   valuesString += clsname + "."  + item + ","; %>
+<% } %>
+  static const List values = const [<%=nu.trimRight(valuesString,",")%>];
+  static const Map selectMap = const {
+<% for (String item : tu.getEnumItems(enumClass)) { %>
+    '<%=item%>': '<%=item%>',
+<% } %>
+  };
+
+  static <%=clsname%> valueOf(String val) {
+    return values.firstWhere((e) => e.value == val, orElse: () => null);
+  }
+
+  Map toJson() {
+    Map map = new Map();
+    map["enumClass"] = "<%=enumClass.getName()%>";
+    map["value"] = value;
+    return map;
+  }
+} 

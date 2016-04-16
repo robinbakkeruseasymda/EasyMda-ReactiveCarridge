@@ -1,0 +1,123 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* java.lang.annotation.* "
+class="ScalaEntity" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String basepck = tplu.getPackage(Tid.SCALA_BASECLASS.name());%>	
+<% String baseclass = tplu.getClassName(Tid.SCALA_BASECLASS.name());%>	
+<% impu.addImport("com.fasterxml.jackson.annotation.*"); %>
+<% impu.addImport(basepck + ".FetchDepth");%>
+<% impu.addImport(basepck + "." + baseclass);%>
+
+<% String extendsClause = "BaseClass"; %>
+<% String overstr = ""; %>
+<% String withClause = ""; %>
+<% String discrValue = ""; %>
+<% String classVals = tu.format(tu.getFieldsExc(cc, VAR_FLD), "%v %n:%o[%t]=%d", ",\n\t"); %>
+<% Annotation discrAnno = tu.getAnnotation(cc, mda.annotation.jpa.DiscriminatorValue.class);%> 
+<% if (isSubClass) { %>
+<%    discrValue = (discrAnno!=null) ? ((mda.annotation.jpa.DiscriminatorValue) discrAnno).value() : "?DiscriminatorValue?"; %>
+<%    String superclassVals = tu.format(tu.getFieldsExc(superClass, VAR_FLD, DISC_FLD), "%n", ","); %>
+<%    superclassVals += ", " + "\"" + discrValue + "\""; %>
+<%	  overstr = "override "; %>
+<%	  extendsClause = superClassname + "(" + superclassVals + ")"; %>
+<%	  classVals = tu.format(tu.getFieldsExc(cc, VAR_FLD), "override %v %n:%o[%t]=%d", ",\n\t\t"); %>
+<% } else if (isBaseClass) { %>
+<%    discrValue = (discrAnno!=null) ? ((mda.annotation.jpa.DiscriminatorValue) discrAnno).value() : "discriminator"; %>
+<%	  classVals = tu.format(tu.getFieldsExc(cc, VAR_FLD), "%v %n:%o[%t]=%d", ",\n\t\t"); %>
+<%    classVals += ", val " + discrValue + ":String=null"; %>
+<% } %> 
+/**
+ Generated "Fd" class that can be used to define whether or not to fetch (deeply) nested classes.
+*/
+ case class <%=entity%>Fd(<%=tu.getFetchModelParams(cc)%>) extends FetchDepth
+ 
+/**
+ generated class
+*/
+@JsonIdentityInfo(generator = classOf[ObjectIdGenerators.UUIDGenerator])
+class <%=classname%>(<%=classVals%>) 
+	extends <%=extendsClause%> <%=withClause%>{
+ 
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD), "private %v _%n : %o[%t] = %d", "\n\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD)) { %>
+<%    String n = fw.name(); %>
+	private var _<%=n%>Id :Option[Long] = None
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%   String n = fw.name(); String fldIdType = tu.getIdType(fw.genericType()).getSimpleName(); 
+	String fldIdName = tu.getIdName(fw.type()); %>
+<%   if (fw.isEntity()) { %>
+	private var _<%=n%><%=tu.ID_SUFFIX%> : Option[<%=fldIdType%>] = None
+<%   } %>
+<% } //for loop %>
+  
+	private var _dirty:Boolean = false
+	
+	// getters 
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD,M2O_FLD), "def %n = _%n", "\n\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%   String n = fw.name(); String fldIdType = tu.getIdType(fw.genericType()).getSimpleName(); 
+	String fldIdName = tu.getIdName(cc); %>
+<%   if (fw.isEntity()) { %>
+	def <%=n%> = _<%=n%> 
+	def <%=n%><%=tu.ID_SUFFIX%>  = _<%=n%><%=tu.ID_SUFFIX%> 
+<%   } else { %>
+	def <%=n%> = _<%=n%> 
+<%   }  %>
+<% } //for loop %>
+	
+	// setters
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD,M2O_FLD,O2O_FLD), "def %n_= (value:%o[%t]) = {_%n = value; _dirty = true;}", "\n\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD)) { %>
+<%    String n = fw.name(); %>
+	def <%=n%>_= (value:Option[<%=fw.genericTypeName()%>]) = {
+		_<%=n%> = value
+		if (_<%=n%>.isDefined) _<%=n%>Id = <%=n%>.get.id else _<%=n%>Id = None
+		_dirty = true
+	}
+	def <%=n%><%=tu.ID_SUFFIX%> = _<%=n%><%=tu.ID_SUFFIX%> 
+	def <%=n%>Id_= (value:Option[Long]) = { _<%=n%>Id = value; _dirty = true; }
+<% } %>
+  
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%   String n = fw.name(); String fldIdType = tu.getIdType(fw.type()).getSimpleName(); 
+	String fldIdName = tu.getIdName(fw.genericType()); String fldType = fw.genericTypeName(); %>
+<%   if (fw.isEntity()) { %>
+	def <%=n%>_= (value:Option[<%=fldType%>]) = { 
+		_<%=n%> = value; 
+		if (_<%=n%>.isDefined) _<%=n%>Id = <%=n%>.get.id else _<%=n%>Id = None
+		_dirty = true; 
+	}
+	 
+	def <%=n%><%=tu.ID_SUFFIX%>_= (value:Option[<%=fldIdType%>]) = { _<%=n%><%=tu.ID_SUFFIX%> = value; _dirty = true; }
+<%   } else { %>
+	def <%=n%>_= (value:Option[Long]) = { _<%=n%> = value; _dirty = true; }
+<%   } %>
+<% } //for loop %>
+	
+	<%=overstr%>def isDirty = _dirty
+ 
+<% if (!isBaseClass) { %>
+  /**
+  * use this method to copy <%=classname%>
+  */ 
+  def copy<%=classname%>(<%=tu.format(tu.getFieldsExc(cc, VAR_FLD), "%n:%o[%t]=%d", ",\n\t\t")%>) = {
+  	val result = new <%=classname%>(<%=tu.format(tu.getFieldsExc(cc, VAR_FLD), "%n", ",") %>)
+ 
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD,M2O_FLD), "result.%n = this.%n", "\n\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%   String n = fw.name(); %>
+<%   if (fw.isEntity()) { %>
+	//result.<%=n%><%=tu.ID_SUFFIX%> = this.<%=n%><%=tu.ID_SUFFIX%>
+	result.<%=n%> = this.<%=n%>
+<%   } else { %>
+	result.<%=n%> = this.<%=n%> 
+<%   } %>
+<% } //for loop %>
+	result._dirty = false
+  	result
+  }
+<% } %>  
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

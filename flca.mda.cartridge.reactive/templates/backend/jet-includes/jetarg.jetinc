@@ -1,0 +1,15 @@
+<% 	// here we parse the input argument(s) and create the object JetArgument:arg and Object[]:args
+	JetArgument arg = null;
+	Object args[] = null;
+	 
+	if (argument != null) { 
+		if (argument instanceof JetArgument) {
+			arg = (JetArgument) argument;
+		} else if (argument.getClass().isArray()) { 
+			args = (Object[]) argument;
+			if (args[0] instanceof JetArgument) {
+				arg = (JetArgument) args[0];
+			}
+		}
+	} 
+%>

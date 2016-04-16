@@ -1,0 +1,33 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.* "
+class="DartDetailFormHtml" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.Gui.class)) return ""; %>
+
+<link rel="import" href="<%=pubpath%>/form_fields/int_form_field.html"> 
+<link rel="import" href="<%=pubpath%>/form_fields/dec_form_field.html">
+<link rel="import" href="<%=pubpath%>/form_fields/string_form_field.html">
+<link rel="import" href="<%=pubpath%>/form_fields/date_form_field.html">
+<link rel="import" href="<%=pubpath%>/form_fields/bool_form_field.html">
+<link rel="import" href="<%=pubpath%>/form_fields/radio_form_field.html">
+<link rel="import" href="<%=pubpath%>/form_fields/combo_form_field.html">
+
+<polymer-element name="<%=uncapname%>-form" >
+  <template>
+   <form method="post">
+<% if (!tu.hasExplicitId(cc) && !isSubClass) {%>
+     <int-form-field id="id_<%=idname%>" label="<%=idname%>" req="true" editable="false" ></int-form-field>
+<% } %>  
+<% for (Fw fw : tu.getFieldsInc(cc, SIMPLE_FLD)) { %>
+<% String fldname = fw.name(); %>
+<%   if (fw.isEnum()) { %>
+     <combo-form-field id="id_<%=fldname%>" items="{{<%=fldname%>_values}}" prompt="choose.." label="<%=fldname%>" ></combo-form-field>
+<%   } else { %>
+<%   String formfld = tu.getFormField(fw.type()); %> 
+     <<%=formfld%> id="id_<%=fldname%>" label="<%=fldname%>" ></<%=formfld%>>
+<%   } %>
+<% }  %>
+      <div><input type="submit" on-click="{{submitForm}}"></div>
+    </form>
+  </template>
+  <script type="application/dart" src="<%=uncapname%>_form.dart"></script>
+</polymer-element>

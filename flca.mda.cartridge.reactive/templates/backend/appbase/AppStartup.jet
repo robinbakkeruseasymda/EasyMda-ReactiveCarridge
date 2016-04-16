@@ -1,0 +1,24 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AppStartup" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% impu.addImport("scala.slick.jdbc.JdbcBackend.Database");%>
+ 
+<% String startImports = nu.getIniFileValue("bootstrap", "initialize.imports"); %>
+<% if (startImports != null ) { %>
+<%=	nu.substituteAppVarbs(startImports,"Demo", "flca.demo")%>
+<% } %>  
+   
+object <%=classname%> {
+<% String startCmds = nu.getIniFileValue("bootstrap", "initialize.commands"); %>
+<% if (startImports != null && startCmds != null) { %>
+<%=	nu.substituteAppVarbs(startCmds,"Demo", "flca.demo")%>
+<% } else { %>  
+  def initialize() : Unit = {
+    //TODO add your additional setup commands here
+    println("Please goto: http://localhost:8000/web/index.html")
+  }
+<% } %>  
+}  
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

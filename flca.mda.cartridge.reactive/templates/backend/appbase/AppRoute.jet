@@ -1,0 +1,57 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* mda.annotation.* "
+class="AppRoute" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+
+<% impu.addImport("akka.http.model.*");%>
+<% impu.addImport("akka.http.model.HttpMethods.*");%>
+<% impu.addImport("scala.concurrent.*");%>
+<% impu.addImport("scala.concurrent.ExecutionContext.Implicits.global");%>
+ 
+object <%=classname%> {
+  
+	// should we inject these !?
+<% List<Class<?>> services1 = tu.getAllModelServices(); %>
+<% for (Class srv : services1) { %>
+<%   String srvReqHandler = tplu.getClassName(srv, Tid.SCALA_SERVICE_REQHANDLER.name()); %>
+	val <%=nu.uncapName(srvReqHandler)%> = new <%=srvReqHandler%>() 
+<% } %>
+<% List<Class<?>> entities1 = tu.getAllModelEntities(); %>
+<% for (Class ent : entities1) { %>
+<%   if (tu.generateRestService(ent)) { %>
+<%     String srvReqHandler = tplu.getClassName(ent, Tid.SCALA_DAO_REQHANDLER.name()); %>
+	val <%=nu.uncapName(srvReqHandler)%> = new <%=srvReqHandler%>() 
+<%   } %>
+<% } %>
+    
+	def route(req: HttpRequest): Future[HttpResponse] = req match {
+<% List<Class<?>> services = tu.getAllModelServices(); %>
+<% for (Class srv : services) { %>
+<%   String srvReqHandler = nu.uncapName(tplu.getClassName(srv, Tid.SCALA_SERVICE_REQHANDLER.name())); %>
+<%   for (Method m : srv.getMethods()) { %>
+<%		RestMethod restanno = (RestMethod) tu.getAnnotation(m, RestMethod.class); %>
+<%		String action = (restanno!=null && restanno.POST()) ? "POST" : "GET"; %>
+		case HttpRequest(<%=action%>, Uri.Path("/<%=m.getName()%>"), _, _, _) => <%=srvReqHandler%>.<%=m.getName()%>(req)
+<%   } %>
+  
+<% } %>
+<% List<Class<?>> entities = tu.getAllModelEntities(); %>
+<% for (Class ent : entities) { %>
+<%   if (tu.generateRestService(ent)) { %>
+<%     String entname = ent.getSimpleName(); %>
+<%     String srvReqHandler = nu.uncapName(tplu.getClassName(ent, Tid.SCALA_DAO_REQHANDLER.name())); %>
+		case HttpRequest(GET, Uri.Path("/find<%=entname%>"), _, _, _) => <%=srvReqHandler%>.find<%=entname%>(req)
+		case HttpRequest(GET, Uri.Path("/retrieve<%=entname%>"), _, _, _) => <%=srvReqHandler%>.retrieve<%=entname%>(req)
+		case HttpRequest(POST, Uri.Path("/save<%=entname%>"), _, _, _) => <%=srvReqHandler%>.save<%=entname%>(req)
+<%   } %>
+<% } %>
+    case _: HttpRequest                                       => unknownReq(req)
+  }
+  
+  private def unknownReq(req: HttpRequest) = {
+    val future: Future[HttpResponse] = Future { HttpResponse(entity = "unknown request " + req.uri.path) }
+    future.map { result => result }
+  }
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

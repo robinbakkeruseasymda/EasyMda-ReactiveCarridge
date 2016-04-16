@@ -1,0 +1,69 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEntityMock" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String mock = tplu.getClassName(Tid.SCALA_ENTITY_MOCK.name());%>
+<% String randomutils = tplu.getClassName(Tid.SCALA_RANDOMUTILS.name());%>
+<% FwSelectType[] opts1 = new FwSelectType[] {}; %>
+<% FwSelectType[] opts2 = new FwSelectType[] {VAR_FLD}; %>
+<% impu.addImport(cc);%>
+ 
+object <%=classname%> {
+<% if (!isBaseClass) { %>
+	def make(<%=tu.format(tu.getFieldsExc(cc, OFD_FLD), "%n:%o[%t]=%d", ",\n\t")%>) : <%=entity%> = {
+  
+	val result = new <%=entity%>(<%=tu.format(tu.getFieldsExc(cc, VAR_FLD, OFD_FLD), "%n", ",\n\t\t")%>)
+	<%=tu.format(tu.getFieldsExc(cc, VAL_FLD, O2M_FLD), "result.%n = %n", "\n\t")%>
+	result
+	}
+<% } %>
+
+<% if (!isBaseClass) { %>	  
+
+	def makeRandom(<%=idname%>:Option[<%=idtype%>]=None) : <%=entity%> = {
+		import <%=randomutils%>._
+		val result = new <%=entity%>(<%=tu.format(tu.getFieldsExc(cc, VAR_FLD, OFD_FLD), "%n", ",\n\t")%>)
+		<%=tu.format(tu.getFieldsExc(cc, VAL_FLD, O2M_FLD,M2O_FLD), "result.%n = %f<randomValue()>", "\n\t\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%    if (!tu.isNestedIn(cc, fw.genericType()) && !fw.isSimple() ) { %>
+<%      String nestedmock = tplu.getClassName(fw.genericType(), Tid.SCALA_ENTITY_MOCK.name());%>
+		result.<%=fw.name()%> = Set(<%=nestedmock%>.makeRandom(None), <%=nestedmock%>.makeRandom(None))
+<%    } %>     
+<% } %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<%      String nestedmock = tplu.getClassName(fw.genericType(), Tid.SCALA_ENTITY_MOCK.name());%>
+		result.<%=fw.name()%> = Set(<%=nestedmock%>.makeRandom(None), <%=nestedmock%>.makeRandom(None))     
+<% } %>
+		result
+	}
+
+<% } else { %>
+
+	def makeRandom(<%=idname%>:Option[<%=idtype%>]=None) : <%=entity%> = {
+		import <%=randomutils%>._
+		val result = LoanMock.makeRandom() //TODO
+		result
+	}
+
+<% } %>
+  
+	def hasAllFetched(obj:<%=entity%>) : Boolean = {
+<% int cnt = 0; %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD)) { %>
+		val b<%=cnt++%> = obj.<%=fw.name()%>.isDefined    
+<% } %>
+<%  for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<%    String nestedmock = tplu.getClassName(fw.genericType(), Tid.SCALA_ENTITY_MOCK.name());%>
+    	val b<%=cnt++%> = !obj.<%=fw.name()%>.isEmpty && obj.<%=fw.name()%>.forall(<%=nestedmock%>.hasAllFetched(_))
+<% } %>
+<% String s = ""; for (int i=0;i<cnt;i++) { s += "b" + i + " && ";} %>
+<%  if (s.trim().isEmpty()) {%>
+		true
+<%  } else { %>
+		<%=nu.trimRight(s, "&&")%>
+<%  } %>
+	}
+}
+
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

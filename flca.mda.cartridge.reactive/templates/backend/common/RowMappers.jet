@@ -1,0 +1,15 @@
+<%@ jet package="backend.common"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="RowMappers" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+package <%=pck%>
+  
+import java.sql.Date;
+import java.util.Date;
+ 
+trait RowMappers {
+  def toDate(date: java.sql.Date) = new java.util.Date(date.getTime())
+  def toDate(date: Option[java.sql.Date]) = if (date.isDefined) new java.util.Date(date.get.getTime()) else null
+  def toSqlDate(date: java.util.Date) = new java.sql.Date(date.getTime)
+  def toSqlDate(date: Option[java.util.Date]) = if (date.isDefined) new java.sql.Date(date.get.getTime()) else null
+}

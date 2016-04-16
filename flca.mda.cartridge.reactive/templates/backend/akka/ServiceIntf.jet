@@ -1,0 +1,25 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ServiceIntf" %>
+<%@ include file="../jet-includes/java-interface-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-interface.jetinc" %>
+/**
+ * <%=tu.getDocumentation()%>
+ *
+ * @author <%=System.getProperty("user.name")%>
+ * @version $Id: ServiceIntf.jet,v 1.1 rbakkerus Exp $
+ * @generated
+ */
+
+trait <%=classname%> {
+<% for (Method m : iu.getMethods()) { %>
+<%  String arguments = nu.join(iu.getArguments(m), ","); String params = iu.getParameters(m);
+    String returnType = iu.getReturn(m); String returnParam = iu.getReturn(m);  %>
+
+	/**
+	 * <%=(iu.getDocumentation(m)) != null ? (iu.getDocumentation(m)) : "todo" %>
+	 */
+	def <%=m.getName()%>(<%=params%>) : <%=returnParam%> 
+<%}//for%>
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

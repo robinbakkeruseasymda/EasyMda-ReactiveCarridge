@@ -1,0 +1,14 @@
+<%@ include file="jetarg.jetinc" %>
+<% ScalaTypeUtils tu = new ScalaTypeUtils();%>
+<% NameUtils nu = new NameUtils();%>
+<% ScalaInterfaceUtils iu = new ScalaInterfaceUtils(); %> 
+<% TemplateUtils tplu = new TemplateUtils();%>
+<% AppUtils au = new AppUtils(); %>
+<% Class intf = arg.getElementClass(); %>
+<% Class cc = arg.getElementClass(); %>
+<% String classname = nu.getCurrentClassname();%>
+<% String pck = nu.getCurrentPackage();%>
+<% String uncapname = nu.uncapName(classname); %>
+<% String idname = tu.getIdName(cc); String idtype = tu.getIdTypeName(); %>
+<% String datastores = tplu.getClassName(Tid.SCALA_APP_DATASTORES.name());%>
+<% String datasource = tplu.getClassName(Tid.SCALA_SLICK_DATASOURCE.name());%>

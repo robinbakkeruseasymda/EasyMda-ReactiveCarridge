@@ -1,0 +1,71 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartAppLibrary" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+library <%=classname%>;
+ 
+export 'dart:html';
+export 'dart:convert';
+ 
+export 'package:polymer/polymer.dart';
+
+export 'package:pubsub/pubsub.dart';
+export 'package:pubsub/message.dart';
+ 
+export 'pub/form_fields/form_fields.dart';
+export 'pub/date_utils.dart';
+export 'pub/enum.dart';
+ 
+export 'view/left_tree.dart';
+export 'view/main_view.dart';
+ 
+<% String entities[] = new String[] {Tid.DART_ENTITY.name()}; %>
+<% for (Class clz : tu.getAllModelEntities()) { %>
+<%   for (String name : entities) { %>
+<%   String impname = tu.getLibraryImport(clz, tplu.getTemplate(name)); %>
+export '<%=impname%>';
+<%   } %>
+  
+<% } %>
+ 
+<% String guiEntities[] = new String[] {Tid.DART_ENTITY_FORM.name(), Tid.DART_ENTITY_BROWSE.name() }; %>
+<% for (Class clz : tu.getAllModelEntities()) { %>
+<%   if (tu.hasAnnotation(clz, mda.annotation.Gui.class)) { %>
+<%     for (String name : guiEntities) { %>
+<%       String impname = tu.getLibraryImport(clz, tplu.getTemplate(name)); %>
+export '<%=impname%>';
+<%     } %>
+<%   } %>
+<% } %>
+ 
+<% String srvEntities[] = new String[] {Tid.DART_ENTITY_CTRL.name(), Tid.DART_DAO_SERVICE.name() }; %>
+<% for (Class clz : tu.getAllModelEntities()) { %>
+<%   if (tu.hasAnnotation(clz, mda.annotation.RestService.class)) { %>
+<%     for (String name : srvEntities) { %>
+<%       String impname = tu.getLibraryImport(clz, tplu.getTemplate(name)); %>
+export '<%=impname%>';
+<%     } %>
+<%   } %>
+<% } %>
+ 
+<% String enumNames[] = new String[] {Tid.DART_ENUM.name() }; %>
+<% for (Class clz : tu.getAllModelEnums()) { %>
+<%   for (String name : enumNames) { %>
+<%     String impname = tu.getLibraryImport(clz, tplu.getTemplate(name)); %>
+export '<%=impname%>';
+<%   } %>
+<% } %>
+ 
+<% String serviceNames[] = new String[] {Tid.DART_SERVICE.name(), Tid.DART_SERVICE_IMPL.name() }; %>
+<% for (Class clz : tu.getAllModelServices()) { %>
+<%   for (String name : serviceNames) { %>
+<%     String impname = tu.getLibraryImport(clz, tplu.getTemplate(name)); %>
+export '<%=impname%>';
+<%   } %>
+<% } %>
+ 
+<% String appTemplateNames[] = new String[] {Tid.DART_APP_CONSTANTS.name(), Tid.DART_APP_SERVICE_BASE.name(), Tid.DART_APP_MAINCTRL.name()}; %>
+<% for (String name : appTemplateNames) { %>
+<%   String impname = tu.getLibraryImport(Object.class, tplu.getTemplate(name)); //TODO %>
+export '<%=impname%>';
+<% } %>
+ 

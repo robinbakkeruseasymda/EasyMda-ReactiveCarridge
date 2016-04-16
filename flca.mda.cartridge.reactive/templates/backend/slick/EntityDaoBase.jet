@@ -1,0 +1,264 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* java.lang.annotation.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEntityDaoBase" %>
+<%@ include file="../jet-includes/entity-daobase.jetinc" %>
+ 
+/**
+ generated class
+*/
+<% String args1=tu.getRowCaseClassParams(cc); %>
+<% String args2=tu.getRowCloneParams(cc); %>
+case class <%=row%>(<%=args1%>) {
+}
+  
+<% String withSubTraits = ""; %>
+<% String discrim = ""; %>
+<% Annotation discanno = tu.getAnnotation(cc, mda.annotation.jpa.DiscriminatorColumn.class);%> 
+<% String discval = (discanno!=null) ? ((mda.annotation.jpa.DiscriminatorColumn) discanno).name() : "discriminator"; %>
+<% if (isBaseClass) { %>
+<%    discrim = "def " + discval + " = column[String](\"" + discval + "\")"; %>
+<%    List<String> subclsNames = new ArrayList<String>(); %>
+<%    for (Class<?> subcls : subclasses) { %>
+<%       withSubTraits += " with " + tplu.getClassName(subcls, Tid.SCALA_ENTITY_DAO.name());  %>
+<%    } %>
+<% } else if (isSubClass) { %>
+<%    withSubTraits = " with " + tplu.getClassName(tu.getSuperClass(cc), Tid.SCALA_ENTITY_DAO.name());  %>
+<% } %>
+
+//-- dao code 
+trait <%=classname%> { this: Profile 
+	<%=tu.getProfileMixins()%>
+	with <%=rowmapper%>  
+	<%=withSubTraits%> =>
+	import profile.simple._
+  
+	lazy val logger = LoggerFactory.getLogger("<%=pck%>.<%=classname%>")
+ 	
+	class <%=rows%>(tag: Tag) extends Table[<%=row%>](tag, "<%=tu.getTableName()%>") {
+		<%=tu.format(tu.getFieldsExc(cc, O2M_FLD, OFD_FLD), "%f<daoRowProperty()>", "\n\t\t")%>
+		<%=discrim%>
+	
+<% String args3=tu.getRowProjectionParams(cc); %>
+		def * = (<%=args3%>) <> (<%=row%>.tupled, <%=row%>.unapply)
+<% for (Fw fieldwrapper : tu.getFieldsInc(cc, M2O_FLD)) { %>
+<%   ScalaFw fw = (ScalaFw) fieldwrapper; %>
+<%   Class ownerMappedBy = fw.getOwnerClassMappedByFkField();
+     String fkqry = (fw.isSimple()) ? ((ownerMappedBy!=null)? ownerMappedBy.getSimpleName(): "???") : fw.type().getSimpleName(); 
+     String fkname = (ownerMappedBy!=null) ? ownerMappedBy.getSimpleName() : fw.type().getSimpleName() + "_FK"; 
+     String fkid = tu.getIdName(fw.type()); %>
+		def <%=fw.name()%>FK = foreignKey("<%=nu.capUpperCamel(fkname)%>", <%=fw.rowFieldname()%>, <%=nu.uncapName(fkqry)%>Query)(_.<%=fkid%>)
+<% } %>
+	}
+  
+	val <%=query%> = TableQuery[<%=rows%>]
+ 
+<%  String findmethod = "find" + entity; %>
+	def <%=findmethod%>()(implicit session: Session): List[<%=entity%>] = {
+		val <%=rows%> = <%=query%>.list
+		for (obj <- <%=rows%>) yield <%=mapfromRow%>(obj)
+	}
+ 
+<%= tu.include(backend.slick.ScalaEntityDaoBaseRetrieve.class, arg) %>
+	
+	def delete<%=entity%>(<%=idname%>:<%=idtype%>)(implicit session: Session): Unit = {
+		logger.info(s"delete <%=entity%> $<%=idname%>")
+ <% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+ <%  String delIdname = tu.getIdName(fw.type()); 
+     String delType = fw.genericTypeName(); 
+     String fkname = (fw.hasMappedByFkField()) ? fw.getMappedByFkFieldName() : "?mappedby?"; %>
+		val deleteIds = for {
+			obj <- <%=nu.uncapName(delType)%>Query filter (_.<%=fkname%> === <%=idname%>) 
+		} yield obj.<%=delIdname%>
+		deleteIds foreach delete<%=delType%>
+	  
+ <% } %>
+		<%=query%> filter (_.<%=idname%> === id) delete
+	}
+	
+<%= tu.include(backend.slick.ScalaEntityDaoBaseSave.class, arg) %>
+  
+	/**
+   * Fill in the last bits: ohc and fd, and eventually with non-generated setup code. 
+   */  
+<% if (isNormalClass) { %>
+	private def finish<%=entity%>(obj:<%=entity%>, fd:Option[<%=fetchModel%>]) : <%=entity%> = {
+		val r = obj.copy<%=entity%>(obj.id, fd)
+		setup<%=entity%>(r)
+	}
+<% } else if (isBaseClass) { %>
+	private def finish<%=entity%>(obj:<%=entity%>) : <%=entity%> = {
+		setup<%=entity%>(obj)
+	}
+<% } else { %>	
+<%  String superClsname = tplu.getClassName(tu.getSuperClass(cc), Tid.SCALA_ENTITY.name()); %>
+	private def finish<%=entity%>(obj:<%=entity%>):<%=entity%> = finish<%=entity%>(obj, mapTo<%=superClsname%>Row(obj))
+	
+	private def finish<%=entity%>(obj:<%=entity%>, baserow: <%=superClsname%>Row) : <%=entity%> = {
+		val r = obj.copy<%=entity%>(obj.id, obj.ofd)
+		setup<%=entity%>(r)
+    }
+	
+<% } %>  
+
+  /**
+   * this is the last method called, before returning the object to the client. Use this method in <%=entity%>Dao to add specific initialization
+   */
+	protected def setup<%=entity%>(obj:<%=entity%>):<%=entity%> = {
+ 		obj
+	}
+   
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<% String fldname = nu.capName(fw.name()); String fldtype = fw.type().getSimpleName(); %>
+	private def is<%=fldname%>Dirty(obj:<%=entity%>):Boolean = { obj.<%=fw.name()%> != null }
+<% }  %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD)) { %>
+<% String fldname = nu.capName(fw.name()); String fldtype = fw.type().getSimpleName(); %>
+	private def mustDelete<%=fldname%>(obj:<%=entity%>):Boolean = { !obj.<%=fw.name()%>.isDefined && obj.<%=fw.name()%><%=tu.ID_SUFFIX%> != null }
+<% }  %>
+  
+<%= tu.makeIsFetchDefinedStr(cc)%>
+
+<% if (isNormalClass) { //-- insert %> 
+	private def insert<%=entity%>(obj: <%=entity%>)(implicit session: Session) : <%=entity%> = {
+		val row = <%=maptoRow%>(obj)
+		val newId:<%=idtype%> = <%=query%> returning <%=query%>.map(_.id) += row
+		obj.copy<%=entity%>(Some(newId))
+	}
+<% } else if (isBaseClass) { %>
+	private def insert<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=row%> = {
+		val row = <%=maptoRow%>(obj)
+		val newId: Long = <%=query%> returning <%=query%>.map(_.id) += row
+		row.copy(Some(newId))
+	}
+<% } else { %>
+	private def insert<%=entity%>(obj: <%=entity%>, newId:Option[Long])(implicit session: Session): <%=entity%> = {
+		val row = <%=maptoRow%>(obj, newId)
+		val checkId: Long = <%=query%> returning <%=query%>.map(_.id) += row
+		// assert that checkId == newId
+		obj.copy<%=entity%>(newId)
+	}
+<% } //-- insert %>
+	
+<% if (isNormalClass) { //-- update %>
+	private def update<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		val row = <%=maptoRow%>(obj)
+		<%=query%>.filter(_.id === row.id).update(row)
+		obj
+	}
+<% } else if (isBaseClass) { %>
+ 	private def update<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=row%> = {
+		val row = <%=maptoRow%>(obj)
+		<%=query%>.filter(_.id === row.id).update(row)
+		row
+	}
+<% } else { %> 
+	private def update<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		val row = <%=maptoRow%>(obj)
+		<%=query%>.filter(_.id === row.id).update(row)
+		// !?mapFromLoanRow(row)
+		obj
+	}
+<% } //-- update %> 
+	
+<% if (isNormalClass) { //-- mapfrom %>
+
+	def <%=mapfromRow%>(row: <%=row%>, newId:Option[<%=idtype%>]=None) : <%=entity%> = {
+		val useId = if (newId.isDefined) newId else row.<%=idname%>
+		val obj = new <%=entity%>(<%=idname%>=useId)
+		<%=tu.format(tu.getFieldsExc(cc, VAL_FLD,REL_FLD), "obj.%n = %f<getFromRowMapper()>", "\n\t\t")%>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD, M2O_FLD)) { %>
+<%    if (fw.isSimple()) { %>
+		obj.<%=fw.name()%> = row.<%=fw.name()%>
+<%    } else { %>
+		obj.<%=fw.name()%>Id = row.<%=fw.name()%>
+<%    } %>
+<% } %>
+  		obj
+	}
+
+<% } else if (isBaseClass) { %> 
+	def <%=mapfromRow%>(row: <%=row%>, newId: Option[<%=idtype%>] = None)(implicit session: Session): <%=entity%> = {
+		val useId = if (newId.isDefined) newId else row.id
+
+		row.<%=discval%> match {
+<% for (Class subclz : subclasses) { %>
+<%    Annotation anno = tu.getAnnotation(subclz, mda.annotation.jpa.DiscriminatorValue.class);%> 
+<%    String discriminator = (anno==null) ? "?discriminator?" : ((mda.annotation.jpa.DiscriminatorValue) anno).value(); %>
+			case "<%=discriminator%>" => retrieve<%=subclz.getSimpleName()%>(row)
+<% } %>
+			case _ => null
+		}
+	}
+
+<% } else { %> 
+
+	def <%=mapfromRow%>(row: <%=row%>, newId:Option[<%=idtype%>]=None) : <%=entity%> = {
+		val useId = if (newId.isDefined) newId else row.<%=idname%>
+		val obj = new <%=entity%>(<%=idname%>=useId)
+		<%=tu.format(tu.getFieldsExc(cc, VAL_FLD, REL_FLD), "obj.%n = %f<getFromRowMapper()>", "\n\t\t")%>
+  		obj
+	}
+	
+<% } //-- mapFrom %> 
+
+ 
+<% if (isNormalClass) { //-- mapTo %>
+	
+	private def <%=maptoRow%>(obj: <%=entity%>): <%=row%> = {
+<% for (Fw fw : tu.getFieldsInc(cc, ENUM_FLD)) { %>
+<% 		Properties props = new Properties(); %>
+<%      props.put("P1", fw.name()); %>
+<%      String mapEnumStr = (fw.isRequired()) ? nu.substitute(tu.ENUMSTR_REQ, props) : nu.substitute(tu.ENUMSTR_OPT, props); %>
+		<%=mapEnumStr%>
+<% } %>
+		<%=row%>(<%=tu.format(tu.getFieldsExc(cc, O2M_FLD, OFD_FLD), "%f<getToRowMapper()>", ",\n\t\t\t")%> )
+	} 
+
+<% } else if (isSubClass) { %>
+
+	def <%=maptoRow%>(obj: <%=entity%>, id: Option[Long]=None): <%=row%> = {
+		val useid = if (id.isDefined) id else obj.id
+		<%=row%>(useid, <%=tu.format(tu.getFieldsExc(cc, O2M_FLD, OFD_FLD, ID_FLD), "%f<getToRowMapper()>", ",\n\t\t\t")%> )
+	}
+
+<% } else { //baseClass-- mapTo %>	
+<%  String maptoParams = tu.format(tu.getFieldsExc(cc, O2M_FLD, OFD_FLD, ID_FLD), "%f<getToRowMapper()>", ",\n\t\t\t"); %>
+<%  maptoParams += ", obj." + discval; %>
+
+	def <%=maptoRow%>(obj: <%=entity%>, id: Option[Long]=None): <%=row%> = {
+		val useid = if (id.isDefined) id else obj.id
+		<%=row%>(useid, <%=maptoParams%> )
+	}
+
+<% } %>
+  
+//--- retrieve and merge nested objects
+
+<%=tu.genRetrieveAndMergeNestedObjects(cc)%>
+
+	private def deleteOneToManys(obj:<%=entity%>)(implicit session: Session): <%=entity%> = {
+<% int n=0; %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<%  n++; String obj1 = "obj" + n; String obj2 = (n==1) ? "obj" : "obj" + (n-1); %>
+		val <%=obj1%> = if (obj.isDirty) deleteOneToMany<%=nu.capName(fw.name())%>(<%=obj2%>) else obj
+<% } %>
+<% String retobj = (n > 0) ? "obj" + n : "obj"; %>
+		<%=retobj%>
+	}
+  
+<% for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<% String fldname = fw.name(); String fldtype = fw.genericTypeName(); 
+	 String fldid = tu.getIdName(fw.type()); String fldidType = tu.getIdType(fw.type()).getSimpleName(); %>
+	private def deleteOneToMany<%=nu.capName(fldname)%>(obj:<%=entity%>)(implicit session: Session): <%=entity%> = {
+		val oldIds = for {
+			<%=fldname%> <- tstcQuery if <%=fldname%>.tsta === obj.<%=idname%>
+		} yield (<%=fldname%>.<%=fldid%>)
+		val newIds:Set[<%=fldidType%>] = obj.<%=fldname%>.map(_.<%=fldid%>.get)
+		oldIds.list.to[Set].diff(newIds).map((<%=fldid%>:<%=fldidType%>) => delete<%=fldtype%>(id))
+		obj
+	}
+  
+<% } %>
+	
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

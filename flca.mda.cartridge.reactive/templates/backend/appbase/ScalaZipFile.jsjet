@@ -1,0 +1,5 @@
+<%@ jet package="backend.scala" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.* flca.mda.codegen.helpers.* reactive.*  " 
+class="ScalaZipFile" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<% tu.setupScalaProject(); %>
+

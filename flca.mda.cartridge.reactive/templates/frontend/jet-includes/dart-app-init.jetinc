@@ -1,0 +1,13 @@
+<%@ include file="../../jetarg.jetinc" %>
+<% DartTypeUtils tu = new DartTypeUtils();%>
+<% ScalaInterfaceUtils iu = new ScalaInterfaceUtils(); %>
+<% NameUtils nu = new NameUtils();%>
+<% TemplateUtils tplu = new TemplateUtils();%>
+<% AppUtils au = new AppUtils(); %>
+<% FilenameHelper fnh = new FilenameHelper(); %>
+<% Class intf = arg.getElementClass(); %>
+<% String appname = au.getApplicationName(); %>
+<% String pck = nu.getCurrentPackage();%>
+<% String classname = nu.getCurrentClassname();%>
+<% String dartlib = appname.toLowerCase() + "_library.dart"; %>
+<% String appConstants = tplu.getAppClassName(Tid.DART_APP_CONSTANTS.name());%>

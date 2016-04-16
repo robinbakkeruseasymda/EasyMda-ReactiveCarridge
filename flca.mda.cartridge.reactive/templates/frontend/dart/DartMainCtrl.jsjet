@@ -1,0 +1,47 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartMainCtrl" %>
+<%@ include file="../jet-includes/dart-app-init.jetinc" %>
+library <%=classname%>;
+ 
+import '../<%=dartlib%>';
+
+import '../view/left_tree.dart';
+
+class MainController {
+  
+  static MainController _instance = null;
+  
+  factory MainController() {
+    if (_instance == null) _instance = new MainController._newInstance();  
+    return _instance;
+  }
+  
+  MainController._newInstance() {
+    Pubsub.subscribe(<%=appConstants%>.EVENT_MENU_CLICK, (PubsubMessage msg){
+      _handleAction(msg.args[0]);
+    });    
+    
+    // init the singleton controller to setup event listeners.
+//    var dummy1 = new TestTstService();
+    var dummy2 = new TstaCtrl();
+  }
+  
+  void _handleAction(cmd) {
+    if (isServiceCmd(cmd)) {
+      Pubsub.publish(<%=appConstants%>.TEST_SERVICE_ACTION, cmd);
+    } else {
+      switch(cmd) {
+        case "Tsta" : 
+          Pubsub.publish(<%=appConstants%>.TSTA_FINDALL);
+          break;
+        default :
+          window.alert("todo " + cmd);
+      }
+    }
+   }
+  
+  bool isServiceCmd(cmd) {
+    return LeftTree.sServiceMethods.contains(cmd);
+  }
+}
+ 

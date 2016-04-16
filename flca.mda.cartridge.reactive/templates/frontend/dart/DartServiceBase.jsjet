@@ -1,0 +1,59 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartServiceBase" %>
+<%@ include file="../jet-includes/dart-app-init.jetinc" %>
+library <%=classname%>;
+  
+import '<%=dartlib%>';
+
+abstract class <%=classname%> {
+
+  <%=classname%>() {
+  }
+
+  var _host;
+  
+  String getHost() {
+    if (_host == null) {
+      int mode = <%=appConstants%>.RUN_MODE;
+      if (mode == <%=appConstants%>.RUN_MODE_LOCAL) {
+        _host = "../resources/json";
+      } else if (mode == <%=appConstants%>.RUN_MODE_TEST) { 
+        //this url is based on the Corsa proxyserver. (> corsa --allow-proxy ALL --allow-origin ALL)
+        _host = "http://localhost:${<%=appConstants%>.PROXY_PORT}/proxy/http://localhost:${<%=appConstants%>.HOST_PORT}";   
+      } else {
+        _host = "localhost:${<%=appConstants%>.HOST_PORT}" ;
+      }
+    }
+    return _host;
+  }
+
+  void getData(action, args, callback) {
+    var request = HttpRequest.getString(getUrl(action, args)).then(callback);
+  }
+  
+ 
+  void postData(action, obj, callback) {
+    if (<%=appConstants%>.RUN_MODE == <%=appConstants%>.RUN_MODE_LOCAL) {
+      print("json = " + JSON.encode(obj));
+      getData(action, null, callback);
+    } else {
+      var request = new HttpRequest();
+      request.onReadyStateChange.listen(callback);
+      request.open("GET", getUrl(action, null));
+      request.send(JSON.encode(obj));
+    }
+  }
+
+  String getUrl(String action, String args) {
+    var url;
+    if (<%=appConstants%>.RUN_MODE == <%=appConstants%>.RUN_MODE_LOCAL) {
+      url = getHost() + "/" + action + ".json";
+    } else {
+      url = getHost() + "/" + action;
+      if (args != null) {
+        url += args;
+      }
+    }
+    return url;
+  }
+}

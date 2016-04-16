@@ -1,0 +1,5 @@
+<% NameUtils nu = new NameUtils();%>
+<% ScalaTypeUtils tu = new ScalaTypeUtils();%>
+<% TemplateUtils tplu = new TemplateUtils();%>
+<% AppUtils au = new AppUtils(); %>
+<% ScalaInterfaceUtils iu = new ScalaInterfaceUtils(); %>

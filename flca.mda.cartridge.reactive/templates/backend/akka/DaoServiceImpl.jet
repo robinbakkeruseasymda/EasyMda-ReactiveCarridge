@@ -1,0 +1,65 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="DaoServiceImpl" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% impu.addImport("scala.slick.jdbc.JdbcBackend.Database");%>
+<% impu.addTemplateImport(Tid.SCALA_SLICK_DATASOURCE.name());%>
+<% impu.addTemplateImport(Tid.SCALA_APP_DATASTORES.name());%>
+<% String srvintf = tplu.getClassName(Tid.SCALA_DAO_SERVICE_INTF.name()); %>
+<% impu.addImport(cc);%>
+ 
+/**
+ * <%=tu.getDocumentation()%>
+ *
+ * @author <%=System.getProperty("user.name")%>
+ * @version $Id: ServiceIntf.jet,v 1.1 rbakkerus Exp $
+ * @generated
+ */
+
+object <%=classname %> extends <%=srvintf %> {
+ 
+  val ds = <%=datasource%>.datasource
+  val db = Database.forDataSource(ds)
+  val dal = new <%=datastores%>(<%=datasource%>.driver)
+ 
+  import dal.profile.simple._
+  
+  override def find<%=entity%>() = {
+    db withSession { implicit session:Session =>
+      dal.find<%=entity%>
+    }
+  }
+ 
+  override def retrieve<%=entity%>(<%=idname%>:<%=idtype%>): Option[<%=entity%>] = {
+    db withSession { implicit session =>
+      dal.retrieve<%=entity%>(<%=idname%>)
+    }
+  }
+ 
+  override def save<%=entity%>(<%=uncapname%>:<%=entity%>): <%=entity%> = {
+    db withSession { implicit session =>
+      dal.save<%=entity%>(<%=uncapname%>)
+    }
+  }
+  
+  override def delete<%=entity%>(<%=idname%>:<%=idtype%>): Unit = {
+    db withSession { implicit session =>
+      dal.delete<%=entity%>(<%=idname%>)
+    }
+  }
+ 
+<%for (Method m : iu.getMethods()) { %>
+<%  String arguments = nu.join(iu.getArguments(m), ","); String params = iu.getParameters(m);
+    String returnType = iu.getReturn(m); String returnParam = iu.getReturn(m);  %>
+
+	/**
+	 * <%=(iu.getDocumentation(m)) != null ? (iu.getDocumentation(m)) : "todo" %>
+	 */
+	def <%=m.getName()%>(<%=params%>) : <%=returnParam%> = {
+    <%=(iu.isVoid(m)) ? "" : "null"%>
+	}
+<%}//for%>
+
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

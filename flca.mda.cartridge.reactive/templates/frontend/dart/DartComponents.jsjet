@@ -1,0 +1,19 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* java.lang.annotation.* flca.mda.api.util.\* flca.mda.codegen.helpers.* mda.annotation.crud.* reactive.* "
+class="DartComponents" %>
+<%@ include file="../jet-includes/dart-app-init.jetinc" %>
+<!DOCTYPE html>
+<html>
+  <head>
+	  <!-- @generated import polymer components -->
+<% for (Class<?> clz : tu.getAllModelEntities()) { %>
+<%   if (tu.hasAnnotation(clz, mda.annotation.Gui.class)) { %>
+<%   flca.mda.codegen.data.ITemplate t1 = tplu.getTemplate(Tid.DART_ENTITY_FORM_HTML.name()); %>
+<%   flca.mda.codegen.data.ITemplate t2 = tplu.getTemplate(Tid.DART_ENTITY_BROWSE_HTML.name()); %>
+<%   String imp1 = tu.getLibraryImport(clz, t1); %>
+<%   String imp2 = tu.getLibraryImport(clz, t2); %>
+		<link rel="import" href="<%=imp1%>">
+		<link rel="import" href="<%=imp2%>">
+<%   } %>
+<% } %>
+  </head>
+</html>

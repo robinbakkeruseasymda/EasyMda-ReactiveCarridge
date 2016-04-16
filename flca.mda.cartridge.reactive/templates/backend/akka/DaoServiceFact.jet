@@ -1,0 +1,15 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="DaoServiceFact" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String srvintf = tplu.getClassName(Tid.SCALA_DAO_SERVICE_INTF.name()); %>
+<% String srvimpl = tplu.getClassName(Tid.SCALA_DAO_SERVICE_IMPL.name()); %>
+<% String srvmock = tplu.getClassName(Tid.SCALA_DAO_SERVICE_MOCK.name()); %>
+ 
+object <%=classname%> {
+  def get() : <%=srvintf%> = {
+    <%=srvimpl%>
+  }
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

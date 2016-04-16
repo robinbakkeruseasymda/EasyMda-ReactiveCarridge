@@ -1,0 +1,2 @@
+<%@ jet package="dummy"  
+class="Dummy" %>

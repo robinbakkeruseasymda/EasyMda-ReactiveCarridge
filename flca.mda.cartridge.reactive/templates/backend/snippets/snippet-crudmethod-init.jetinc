@@ -1,0 +1,6 @@
+<%@ include file="./snippet-init.jetinc"%>
+<% Object args[] = (Object[]) argument; %>
+<% CrudMethod crudmethod = (CrudMethod) args[0]; %>
+<% String classname = nu.getCurrentClassname();%>
+<% String entity = crudmethod.getEntity().getSimpleName(); %>
+<% CrudOperation crudoper = crudmethod.getCrudOper(); %>

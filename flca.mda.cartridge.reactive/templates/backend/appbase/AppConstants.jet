@@ -1,0 +1,13 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AppConstants" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+  
+object <%=classname%> {
+  val HTTP_PORT = 8000
+  val TIMEOUT = 25
+  val CURL_CMD = "curl "
+  val CURL_POST_CMD = """curl -i -H "Accept: application/json" -H "Content-Type:application/json" -X POST --data """  
+}  
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

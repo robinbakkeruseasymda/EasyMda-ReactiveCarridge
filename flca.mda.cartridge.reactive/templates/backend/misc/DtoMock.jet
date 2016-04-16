@@ -1,0 +1,32 @@
+<%@ jet package="backend.misc"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaDtoMock" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String mock = tplu.getClassName(Tid.SCALA_ENTITY_MOCK.name());%>
+<% String randomutils = tplu.getClassName(Tid.SCALA_RANDOMUTILS.name());%>
+<% FwSelectType[] opts1 = new FwSelectType[] {}; %>
+<% FwSelectType[] opts2 = new FwSelectType[] {VAR_FLD}; %>
+<% impu.addImport(cc);%>
+ 
+object <%=classname%> {
+<% String makeArgs = tu.format(tu.getFieldsExc(cc, SPECIAL_FLD), "%n:%o[%t]=%d", ",\n\t\t"); %>
+<% String valNames = tu.format(tu.getFieldsExc(cc, SPECIAL_FLD,VAR_FLD), "%n", ",\n\t\t"); %>
+
+	def make(<%=makeArgs %>) : <%=entity%> = {
+  
+		val result = new <%=entity%>(<%=valNames%>)
+		
+		<%=tu.format(tu.getFieldsExc(cc, VAL_FLD, O2M_FLD), "result.%n = %n", "\n\t\t")%>
+		result
+	}
+	
+	def makeRandom(<%=idname%>:Option[<%=idtype%>]=None) : <%=entity%> = {
+		import <%=randomutils%>._
+		val result = new <%=entity%>(<%=valNames%>)
+		<%=tu.format(tu.getFieldsExc(cc, VAL_FLD, O2M_FLD, SPECIAL_FLD), "result.%n = %f<randomValue()>", "\n\t\t")%>
+		result
+	}
+}
+
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

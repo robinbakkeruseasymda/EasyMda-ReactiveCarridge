@@ -1,0 +1,194 @@
+<%@ jet package="backend.slick"	
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*	flca.mda.codegen.helpers.* reactive.* "
+class="ScalaTestEntityDao" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String appConst = tplu.getClassName(Tid.SCALA_APP_CONSTANTS.name());%>
+<% String actorPck = tplu.getPackage(Tid.SCALA_DAO_SERVICE_ACTOR.name());%>
+<% String actorClz = tplu.getClassName(Tid.SCALA_DAO_SERVICE_ACTOR.name());%>
+<% impu.addImport(appPck + "." + appConst + ".*");%>
+<% impu.addImport(actorPck + "." + actorClz + ".*");%>
+<% impu.addImport("scala.slick.util.SlickLogger");%>
+<% impu.addImport("org.junit.runner.RunWith");%>
+<% impu.addImport("org.scalatest.junit.JUnitRunner");%>
+<% impu.addImport("scala.slick.jdbc.JdbcBackend.Database");%>
+<% impu.addImport("org.scalatest.FunSuite");%>
+<% impu.addImport("org.scalatest.BeforeAndAfterEach");%>
+<% impu.addTemplateImport(Tid.SCALA_SLICK_PROFILE.name());%>
+<% impu.addTemplateImport(Tid.SCALA_SLICK_DATASOURCE.name());%> 
+<% impu.addTemplateImport(Tid.SCALA_APP_DATASTORES.name());%> 
+<% impu.addTemplateImport(Tid.SCALA_APP_CONFIG.name());%>
+<% impu.addTemplateImport(Tid.SCALA_JSONUTILS.name());%>
+<% impu.addImport(cc);%>
+<% impu.addScalaImport(entity + "Fd", cc, Tid.SCALA_ENTITY.name());%>
+<% String mock = tplu.getClassName(Tid.SCALA_ENTITY_MOCK.name());%>
+<% String appcfg = tplu.getClassName(Tid.SCALA_APP_CONFIG.name());%>
+	 
+@RunWith(classOf[JUnitRunner])
+class <%=classname%> extends FunSuite {
+	
+	val ds = <%=datasource%>.datasource
+	var dal = new <%=datastores%>(<%=datasource%>.driver)
+	val db = Database.forDataSource(ds)
+	
+	test("create schema") {
+		setup(<%=datasource%>.dbType, dal, db)
+	}
+	
+	def setup(name:String, dal:<%=datastores%>, db:Database) {
+		import dal._
+		import dal.profile.simple._
+	
+		println("Running test against " + name)
+		db withSession { implicit session:Session =>
+			if (<%=appcfg%>.dropTables) {dal.drop}
+			if (<%=appcfg%>.createTables) {dal.create}
+		}
+	}
+		
+	test("create some new <%=uncapname%>s") {
+		for (i <- 1 to 10) {
+			val <%=uncapname%>:<%=entity%> = <%=mock%>.makeRandom(None)
+			testSave<%=entity%>(<%=uncapname%>, dal)
+		}
+	}
+	
+	test("find all <%=uncapname%>s") {
+		val <%=uncapname%>s = testFind<%=entity%>(dal)
+		assert(<%=uncapname%>s.size > 9)
+	}
+	
+	test("retrieve <%=uncapname%> fetch complete") {
+		val obj = getOneObject(Some(<%=entity%>Fd()))
+		assert(<%=mock%>.hasAllFetched(obj))
+	}
+	
+	test("retrieve <%=uncapname%> without nested objects") {
+		val obj = getOneObject(None)
+<% int cnt = 0; %>
+<% for (Fw fw : tu.getFieldsInc(cc, O2O_FLD)) { %>
+		val b<%=cnt++%> = !obj.<%=fw.name()%>.isDefined		
+<% } %>
+<%	for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+<%		String nestedmock = tplu.getClassName(fw.genericType(), Tid.SCALA_ENTITY_MOCK.name());%>
+		val b<%=cnt++%> = obj.<%=fw.name()%>.isEmpty 
+<% } %>
+<% String s = ""; for (int i=0;i<cnt;i++) { s += "b" + i + " && ";} %>
+<% if (s.trim().isEmpty()) { %>
+		// no nested objects to test here
+<% } else { %>
+		assert(<%=nu.trimRight(s, "&&")%>)
+<% } %>
+	}
+		
+	test("update <%=uncapname%> with changes") {
+		val obj1 = getOneObject(Some(<%=entity%>Fd()))
+		//TODO obj1.name = "AAA"
+		val obj2 = testSave<%=entity%>(obj1, dal)
+		//TODO assert(obj2.name === "AAA")
+		println(obj2)
+	}
+	
+	test("update <%=uncapname%> without changes") {
+		val obj1 = getOneObject(Some(<%=entity%>Fd()))
+		val obj2 = testSave<%=entity%>(obj1, dal)
+		println(obj2)
+	}
+	
+	test("retrieve unknown <%=uncapname%>") {
+		val obj1 = testRetrieve<%=entity%>(-1, dal, None)
+		assert(obj1.isEmpty)
+	}
+	
+	test("delete a <%=uncapname%>") {
+		val list = testFind<%=entity%>(dal)
+		val n1 = list.size
+		val obj = list(list.size-1)
+		testDelete<%=entity%>(obj.<%=idname%>.get, dal)
+		val n2 = testFind<%=entity%>(dal).size
+		assert(n2 == n1-1)
+	}	
+	
+	test("delete an onetomany element") {
+		val obj1 = getOneObject(Some(<%=entity%>Fd()))
+<%	for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+		val n1_<%=fw.name()%> = obj1.<%=fw.name()%>.size
+		obj1.<%=fw.name()%> -= obj1.<%=fw.name()%>.head
+<% } %>
+		val obj2 = testSave<%=entity%>(obj1, dal)
+<%	for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+		val n2_<%=fw.name()%> = obj2.<%=fw.name()%>.size
+<% } %>
+<%	for (Fw fw : tu.getFieldsInc(cc, O2M_FLD)) {%>
+		assert(n2_<%=fw.name()%> == n1_<%=fw.name()%> - 1)
+<% } %>
+	}	
+	
+	test("make find curl cmd") {
+		val url = s"http://localhost:$HTTP_PORT/Find<%=entity%>"
+		val s = CURL_CMD + url
+		println(s)
+	}
+	
+	test("make retrieve curl cmd") {
+		val url = s"http://localhost:$HTTP_PORT/retrieve<%=entity%>?id=1"
+		val s = CURL_CMD + url
+		println(s)
+	}
+	
+	test("make save curl cmd") {
+		val obj = <%=mock%>.makeRandom(None)
+		val req = Save<%=entity%>Req(obj)
+		val json = JsonUtils.toJson(req);
+		val url = s"http://localhost:$HTTP_PORT/save<%=entity%>"
+		val s = CURL_POST_CMD + "'" + json + "' " + url
+		println(s)
+	}
+	
+	//--- dao helpers --
+	
+	private def getOneObject(fd:Option[<%=entity%>Fd]) : <%=entity%> = {
+		val list = testFind<%=entity%>(dal)
+		val n1 = list.size
+		val obj = list(list.size-1)
+		testRetrieve<%=entity%>(obj.id.get, dal, fd).get
+	}
+		
+	private def testFind<%=entity%>(dal:<%=datastores%>): List[<%=entity%>] = {
+		import dal._
+		import dal.profile.simple._
+
+		db withSession { implicit session =>
+			find<%=entity%>
+		}
+	}
+	
+	private def testRetrieve<%=entity%>(<%=idname%>:<%=idtype%>, dal:<%=datastores%>, fd:Option[<%=entity%>Fd]=Some(<%=entity%>Fd())): Option[<%=entity%>] = {
+		import dal._
+		import dal.profile.simple._
+
+		db withSession { implicit session =>
+			retrieve<%=entity%>(<%=idname%>, fd)
+		}
+	}
+	
+	private def testSave<%=entity%>(<%=uncapname%>:<%=entity%>, dal:<%=datastores%>): <%=entity%> = {
+		import dal._
+		import dal.profile.simple._
+
+		db withSession { implicit session =>
+			save<%=entity%>(<%=uncapname%>)
+		}
+	}
+		
+	private def testDelete<%=entity%>(<%=idname%>:<%=idtype%>, dal:<%=datastores%>): Unit = {
+		import dal._
+		import dal.profile.simple._
+
+		db withSession { implicit session =>
+			delete<%=entity%>(<%=idname%>)
+		}
+	}
+	
+}
+<% importStringBuffer.insert(importInsertionPoint,	impu.computeSortedImports());%>

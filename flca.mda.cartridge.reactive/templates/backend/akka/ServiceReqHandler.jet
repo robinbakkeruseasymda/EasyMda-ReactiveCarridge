@@ -1,0 +1,92 @@
+<%@ jet package="backend.akka"	
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*	flca.mda.codegen.helpers.* reactive.* "
+class="ServiceReqHandler" %>
+<%@ include file="../jet-includes/java-interface-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-interface.jetinc" %>
+<% impu.addImport("scala.concurrent.*");%>
+<% impu.addImport("scala.concurrent.ExecutionContext.Implicits.global");%>
+<% impu.addImport("scala.concurrent.duration.*");%>
+<% impu.addImport("scala.language.postfixOps");%>
+<% impu.addImport("scala.util.Failure");%>
+<% impu.addImport("scala.util.Success");%>
+<% impu.addImport("akka.actor.*");%>
+<% impu.addImport("akka.event.*");%>
+<% impu.addImport("akka.pattern.ask");%>
+<% impu.addImport("akka.http.model.*");%>
+<% impu.addImport("akka.stream.FlowMaterializer");%>
+<% impu.addImport("akka.stream.scaladsl.*");%>
+<% impu.addImport("akka.util.Timeout");%>
+<% impu.addImport("akka.event.LoggingAdapter");%>
+<% impu.addTemplateImport(Tid.SCALA_SERVICE_ACTOR.name()); %>
+<% impu.addImport(cc);%>
+<% String actor = tplu.getClassName(Tid.SCALA_SERVICE_ACTOR.name()); %>
+<% String actorPck = tplu.getPackage(Tid.SCALA_SERVICE_ACTOR.name());%>
+<% impu.addImport(actorPck + "." + actor + ".*");%>
+<% String jsonutils = tplu.getClassName(Tid.SCALA_JSONUTILS.name());%>
+<% String actorInstance = nu.uncapName(actor); %>
+ 
+class <%=classname%> {
+	 
+	implicit val system = ActorSystem("<%=classname%>")
+	implicit val mat = FlowMaterializer()
+	val logger = Logging.getLogger(system, this);
+ 
+	val <%=actorInstance%> = system.actorOf(<%=actor%>.props, <%=actor%>.name)
+	 
+<% for (Method m : iu.getMethods()) { %>
+<%	String arguments = nu.join(iu.getArguments(m), ","); String params = iu.getParameters(m);
+		String returnType = iu.getReturn(m); String returnParam = iu.getReturn(m);	
+		boolean simpleRettyp = tu.isSimpleField(m.getReturnType());
+		String entityValue = (simpleRettyp) ? "value" : "JsonUtils.toJson(value)";
+		String name = m.getName(); String ccName = nu.capName(m.getName());
+		List<String> reqList = new ArrayList<String>(); 
+		for (String s : iu.getArguments(m)) { reqList.add("req." + s); }
+		String reqvalues = nu.join(reqList, ","); %>
+
+	def <%=name%>(req:HttpRequest) : Future[HttpResponse] = {
+		logger.debug("start handle <%=name%> ....")
+		implicit val timeout = Timeout(30 seconds)
+		
+<% if (iu.isVoid(m) && iu.getParameterCount(m) == 0) { %>
+
+		<%=actorInstance%> ! <%=ccName%>Req
+		voidResponse()
+	}
+<% } else if (iu.isVoid(m) && iu.getParameterCount(m) > 0) { %>
+ 
+ 		<%=actorInstance%> ! <%=ccName%>Req
+		voidResponse()
+	}
+<% } else if (!iu.isVoid(m) && iu.getParameterCount(m) == 0) { %>
+ 
+		val p = Promise[HttpResponse]()
+ 
+ 		val futureResponse = <%=nu.uncapName(actor)%>.ask(<%=ccName%>Req).mapTo[<%=ccName%>Res]
+		futureResponse onComplete {
+			case Success(<%=ccName%>Res(value)) => p success HttpResponse(entity=<%=entityValue%>)
+			case Failure(e) => p success HttpResponse(500, entity=e.getMessage)
+		}
+		p.future
+	}
+<% } else { %>
+ 
+		val p = Promise[HttpResponse]()
+ 
+ 		val futureResponse = <%=nu.uncapName(actor)%>.ask(<%=ccName%>Req).mapTo[<%=ccName%>Res]
+		futureResponse onComplete {
+			case Success(<%=ccName%>Res(value)) => p success HttpResponse(entity=<%=entityValue%>)
+			case Failure(e) => p success HttpResponse(500, entity=e.getMessage)
+		}
+		p.future
+	}
+<%	} %>
+	
+<% } //loop %>
+ 
+	def voidResponse() : Future[HttpResponse] = {
+		val future: Future[HttpResponse] = Future { HttpResponse() }
+		future.map { result => result }
+	}
+ 
+}
+<% importStringBuffer.insert(importInsertionPoint, impu.computeSortedImports());%>

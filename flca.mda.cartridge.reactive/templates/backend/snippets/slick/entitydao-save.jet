@@ -1,0 +1,113 @@
+<%@ jet package="backend.slick"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEntityDaoBaseSave" %>
+<%@ include file="../../jet-includes/java-class-init.jetinc" %>
+<% String row= entity + "Row"; String rows= entity + "Rows"; String query= nu.uncapName(entity) + "Query"; %>
+<% ImportUtils importUtils = new ImportUtils(false); %>
+
+<% if (isNormalClass) { %>
+
+	def save<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		val isNew = obj.id.isEmpty
+		val isDirty = obj.isDirty
+		var r = if (isNew) insert<%=entity%>(obj) else obj
+		r = save<%=entity%>Rels(r)
+ 		r = if (isNew || isDirty) update<%=entity%>(r) else r
+		r = if (!isNew) deleteOneToManys(r) else r
+		finish<%=entity%>(r, r.ofd)
+	}
+	
+	private def save<%=entity%>Rels(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		var r = obj
+<% for (Fw fw : tu.getAllFields(cc)) { %>
+<%   String fldname = nu.capName(fw.name()); %>
+<%   if (fw.isRelation() && fw.isEntity() && fw.isOwner()) { %>
+		r = save<%=entity%><%=fldname%>(r)
+<%   } %>
+<% } %>
+		r
+	}
+	
+<% } else if (isBaseClass) { %>
+
+	def save<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		val isNew = obj.id.isEmpty
+		val isDirty = obj.isDirty
+		val baserow = if (isNew) insert<%=entity%>(obj) 
+		              else if (isDirty) update<%=entity%>(obj) else mapTo<%=entity%>Row(obj)
+		var r = saveConcrete<%=entity%>(obj, baserow)
+		r = save<%=entity%>Rels(r)
+		finish<%=entity%>(r)
+	}
+	//
+	private def saveConcrete<%=entity%>(obj:<%=entity%>, baserow:<%=row%>)(implicit session: Session): <%=entity%> = {
+		obj match {
+<% for (Class subclz : subclasses) { %>
+<%   importUtils.addTemplateImport(subclz, Tid.SCALA_ENTITY.name()); %>
+<%   String subname = subclz.getSimpleName(); %>		
+			case _: <%=subname%> => save<%=subname%>(obj.asInstanceOf[<%=subname%>], baserow)
+<% } %>			
+			case _ => throw new ClassCastException("can not cast " + obj.getClass())
+		}
+	}
+	
+	private def save<%=entity%>Rels(obj:<%=entity%>):<%=entity%> = obj
+		
+<% } else { %>
+<% String superClsname = tu.getSuperClass(cc).getSimpleName(); %>
+
+	def save<%=entity%>(obj: <%=entity%>)(implicit session: Session): <%=entity%> = {
+		val r = save<%=superClsname%>(obj)
+		r.asInstanceOf[<%=entity%>]
+	}
+  
+	/**
+	 * this is called from <%=superClsname%>DaoBase
+	 */
+	def save<%=entity%>(obj: <%=entity%>, baseRow:<%=superClsname%>Row)(implicit session: Session): <%=entity%> = {
+		val isNew = obj.id.isEmpty
+    	val isDirty = obj.isDirty
+		var r = if (isNew) insert<%=entity%>(obj, baseRow.id) 
+				else if (isDirty) update<%=entity%>(obj) else obj
+		r = save<%=entity%>Rels(r)
+		finish<%=entity%>(r, baseRow)
+	}
+	
+	private def save<%=entity%>Rels(obj:<%=entity%>)(implicit session: Session) : <%=entity%> = {
+    	//  deleteOneToManys(obj) n.a.
+		obj
+	}
+	
+<% } %>
+
+<% for (Fw fw : tu.getAllFields(cc)) { %>
+<%   if (fw.isEntity() && fw.isManyToOneField() && fw.isOwner()) { %>
+<%   String fldname = fw.name(); String fldtype = fw.typeName(); %>
+	private def save<%=entity%><%=fw.genericTypeName()%>(obj:<%=entity%>)(implicit session: Session) : <%=entity%> = {
+		if (obj.<%=fldname%>.isDefined) obj.<%=fldname%> = Some(save<%=fldtype%>(obj.<%=fldname%>.get))
+		obj
+	}
+<%   } %>
+<% } %>
+ 
+<% for (Fw fw : tu.getAllFields(cc)) { %>
+<%   if (fw.isEntity() && (fw.isOneToManyField() || fw.isOneToOneField())) { %>
+<%   String fldname = fw.name(); %>
+<%	 String fldtype = fw.genericTypeName(); %>
+<%   String fkname = (fw.hasMappedByFkField()) ? fw.getMappedByFkFieldName() : "?mappedby?"; 
+	 String item = nu.uncapName(fw.genericTypeName());
+	 Fw mapByFld = (fw.hasMappedByFkField()) ? fw.getMappedByFkField() : null; %> 
+	def save<%=entity%><%=nu.capName(fldname)%>(obj:<%=entity%>)(implicit session: Session): <%=entity%> = {
+		obj.<%=fldname%> = obj.<%=fldname%>.map(<%=item%> => {
+<%      if (fw.isOneToManyField()) { %>
+<%        String setobj = (mapByFld != null) ? "Some(obj)" : "???"; 
+			if (mapByFld.isSimple()) setobj = "obj." + idname; %>
+			<%=item%>.<%=fkname%> = <%=setobj%>
+<%      } %>
+			save<%=fldtype%>(<%=item%>)
+		})
+		obj
+	}
+  
+<%   } %>
+<% } %>

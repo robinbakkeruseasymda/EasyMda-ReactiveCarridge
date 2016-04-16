@@ -1,0 +1,13 @@
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% impu.addTemplateImport(Tid.SCALA_ROWMAPPERS.name());%>
+<% impu.addTemplateImport(Tid.SCALA_SLICK_PROFILE.name());%>
+<% impu.addScalaImport(entity + "Fd", cc, Tid.SCALA_ENTITY.name());%>
+<% impu.addImport("com.easymda.util.FetchDepth");%>
+<% impu.addImport("org.slf4j.LoggerFactory");%>
+<% impu.addImport("scala.language.postfixOps");%>
+<% impu.addImport(cc);%>
+
+<% String rowmapper = tplu.getClassName(Tid.SCALA_ROWMAPPERS.name()); %>
+<% String row= entity + "Row"; String rows= entity + "Rows"; String query= nu.uncapName(entity) + "Query"; %>
+<% String mapfromRow= "mapFrom" + row; String maptoRow= "mapTo" + row;%>

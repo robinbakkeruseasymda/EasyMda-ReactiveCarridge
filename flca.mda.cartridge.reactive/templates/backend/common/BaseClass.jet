@@ -1,0 +1,15 @@
+<%@ jet package="backend.common"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="BaseClass" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+package <%=pck%>
+ 
+import org.apache.commons.lang3.builder.ToStringBuilder
+ 
+abstract class FetchDepth()
+ 
+abstract class BaseClass() {
+  override def toString() = {
+    ToStringBuilder.reflectionToString(this)
+  }	
+}

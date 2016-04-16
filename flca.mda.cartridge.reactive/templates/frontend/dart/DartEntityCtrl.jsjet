@@ -1,0 +1,79 @@
+<%@ jet package="reactive.dart" imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.*	" 
+class="DartEntityController" %>
+<%@ include file="../jet-includes/dart-class-init.jetinc" %>
+<% String daosrv = nu.uncapName(daoservice); %>
+<% if (!tu.hasAnnotation(cc, mda.annotation.RestService.class)) return ""; %>
+library <%=pck%>.<%=classname%>;
+ 
+import '<%=dartlib%>';
+
+class <%=classname%> {
+
+  static <%=classname%> _instance = null;
+
+  <%=daoservice%> _<%=daosrv%>;
+
+  factory <%=classname%>() {
+    if (_instance == null) _instance = new <%=classname%>._newInstance();
+    return _instance;
+  }
+
+  <%=classname%>._newInstance() {
+    Pubsub.subscribe(<%=appConstants%>.<%=entityUC%>_FINDALL, (PubsubMessage msg) {
+      _startBrowse();
+    });
+  }
+
+  void _startBrowse() {
+    <%=daosrv%>.findAll<%=entity%>(_handleFindAll);
+  }
+
+  void _onStartEdit(Event me, var detail, Node target) {
+    DivElement div = target;
+    print("index = " + div.id);
+    <%=daosrv%>.retrieve<%=entity%>(div.id, _handleRetrieve<%=entity%>);
+  }
+
+  void _onDoSubmit(<%=entity%> <%=uncapname%>) {
+    <%=daosrv%>.save<%=entity%>(<%=uncapname%>, _handleSave<%=entity%>);
+  }
+  
+  void _handleSave<%=entity%>(data) {
+//    print("_handleSave<%=entity%> " + data);
+    var <%=uncapname%> = new <%=entity%>.fromJson(data);
+    _showForm(<%=uncapname%>);
+    print("_handleRetrieve<%=entity%> " + <%=uncapname%>.toString());
+  }
+  
+  void _handleFindAll(data) {
+    //    print("_handleFindAll " + data);
+    _showGrid(data);
+  }
+
+  void _handleRetrieve<%=entity%>(data) {
+    print("_handleRetrieve<%=entity%> " + data);
+    var <%=uncapname%> = new <%=entity%>.fromJson(data);
+    _showForm(<%=uncapname%>);
+    print("_handleRetrieve<%=entity%> " + <%=uncapname%>.toString());
+  }
+
+  void _showGrid(data) {
+    <%=browseForm%> view = new Element.tag('<%=uncapname%>-browse');
+    List<String> rows = JSON.decode(data);
+    view.records = rows;
+    view.clickEdit = _onStartEdit;
+    MainView.instance().showContent(view);
+  }
+
+  void _showForm(<%=uncapname%>) {
+    <%=detailForm%> view = new Element.tag('<%=uncapname%>-form');
+    view.<%=uncapname%> = <%=uncapname%>;
+    view.submitHandler = _onDoSubmit;
+    MainView.instance().showContent(view);
+  }
+
+  <%=daoservice%> get <%=nu.uncapName(daosrv)%> {
+    if (_<%=daosrv%> == null) _<%=daosrv%> = new <%=daoservice%>();
+    return _<%=daosrv%>;
+  }
+} 

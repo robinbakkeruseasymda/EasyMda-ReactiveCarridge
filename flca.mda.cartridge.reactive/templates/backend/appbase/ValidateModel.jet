@@ -1,0 +1,11 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="ValidateModel" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+
+<% List<String> msgs = new ArrayList<String>(); boolean flag = tu.validate(cc, msgs);%>
+<% for (String msg : msgs) { %>
+#validation-messages
+<%=msg%>
+<% } %>
+ 

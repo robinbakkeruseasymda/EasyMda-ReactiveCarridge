@@ -1,0 +1,68 @@
+<%@ jet package="backend.app"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="AppJsonMocks" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+ 
+<% impu.addImport("com.easymda.util.JsonUtils");%>
+<% impu.addImport("org.junit.runner.RunWith");%>
+<% impu.addImport("org.scalatest.BeforeAndAfterEach");%>
+<% impu.addImport("org.scalatest.FunSuite");%>
+<% impu.addImport("org.scalatest.junit.JUnitRunner");%>
+<% impu.addImport("java.io.PrintWriter");%>
+<% impu.addImport("java.io.File");%>
+
+@RunWith(classOf[JUnitRunner])
+class <%=classname%> extends FunSuite {
+  
+  val tmpdir = System.getProperty("java.io.tmpdir")
+ 
+<% for (Class clz : tu.getAllModelEntities()) { %> 
+<%   if (tu.generateRestService(clz)) { %>
+<%   String name=clz.getSimpleName(); String mock=tplu.getClassName(clz, Tid.SCALA_ENTITY_MOCK.name()); %>
+  test("save<%=name%>") {
+	val json = JsonUtils.toJson(<%=mock%>.makeRandom(None))
+    writeFile("save<%=name%>.json", json)  
+  }  
+    
+  test("find<%=name%>") {
+    val list = List(<%=mock%>.makeRandom(None), <%=mock%>.makeRandom(None), <%=mock%>.makeRandom(None))
+	val json = JsonUtils.toJson(list)
+    writeFile("find<%=name%>.json", json)  
+  }
+    
+  test("retrieve<%=name%>") {
+	val json = JsonUtils.toJson(<%=mock%>.makeRandom(Some(100)))
+    writeFile("retrieve<%=name%>.json", json)  
+  }  
+  
+<%   } %>
+<% } %>
+
+<% for (Class clz : tu.getAllModelServices()) { %>
+<%   for (Method m : iu.getMethods(clz)) { %>
+<%   Class rettyp = m.getReturnType(); %>
+  test("<%=m.getName()%>") {
+<%     if (tu.isEntity(rettyp) || tu.isDto(rettyp)) { %>
+<%     String mock = (tu.isEntity(rettyp)) ? tplu.getClassName(rettyp, Tid.SCALA_ENTITY_MOCK.name()) : tplu.getClassName(rettyp, Tid.SCALA_DTO_MOCK.name()); %> 
+	val json = JsonUtils.toJson(<%=mock%>.makeRandom(None))
+<%     } else { %>
+	val json = JsonUtils.toJson("TODO")
+<%     }  %>
+    writeFile("<%=m.getName()%>.json", json)  
+  }
+  
+<%   } %>
+  
+<% } %>
+
+  private def writeFile(name: String, text: String): Unit = {
+    val fname = tmpdir + "/" + name
+	val writer = new PrintWriter(new File(fname))
+    writer.write(text)
+    writer.close()
+    println("created " + fname)
+  }
+}
+
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

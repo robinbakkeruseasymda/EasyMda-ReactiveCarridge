@@ -1,0 +1,59 @@
+<%@ jet package="backend.akka"  
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*  flca.mda.codegen.helpers.* reactive.* "
+class="DaoServiceActor" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% String srvfact = tplu.getClassName(Tid.SCALA_DAO_SERVICE_FACT.name()); %>
+<% impu.addImport("akka.actor.Actor");%>
+<% impu.addImport("akka.actor.Props");%>
+<% impu.addImport("akka.actor.Status.Failure");%>
+<% impu.addImport(cc);%>
+ 
+object <%=classname%> {
+  def props = Props[<%=classname%>]
+  def name = "<%=classname%>"
+  
+  case object Find<%=entity%>Req
+  case class Find<%=entity%>Res(value: List[<%=entity%>]) 
+
+  case class Retrieve<%=entity%>Req(<%=idname%>:<%=idtype%>)
+  case class Retrieve<%=entity%>Res(value:Option[<%=entity%>]) 
+
+  case class Save<%=entity%>Req(value:<%=entity%>)
+  case class Save<%=entity%>Res(value:<%=entity%>) 
+  
+  case class Delete<%=entity%>Req(<%=idname%>:<%=idtype%>)
+}
+ 
+class <%=classname%> extends Actor {
+  import <%=classname%>._
+
+  import context._
+
+  def receive: Receive = {
+    case Find<%=entity%>Req => {
+    	try {
+			sender ! Find<%=entity%>Res(service.find<%=entity%>)
+    	} catch {
+    		case e:Exception => sender ! Failure(e)
+    	}
+    }
+    case Retrieve<%=entity%>Req(<%=idname%>) => {
+    	try {
+			sender ! Retrieve<%=entity%>Res(service.retrieve<%=entity%>(<%=idname%>))
+    	} catch {
+    		case e:Exception => sender ! Failure(e)
+    	}
+    }
+    case Save<%=entity%>Req(value) => {
+    	try {
+			sender ! Save<%=entity%>Res(service.save<%=entity%>(value))
+    	} catch {
+    		case e:Exception => sender ! Failure(e)
+    	}
+    }
+  }
+
+  val service = <%=srvfact%>.get
+}
+<% importStringBuffer.insert(importInsertionPoint,  impu.computeSortedImports());%>

@@ -1,0 +1,37 @@
+<%@ jet package="backend.slick"	
+imports="java.util.* java.lang.reflect.* mda.type.* flca.mda.api.util.*	flca.mda.codegen.helpers.* reactive.* "
+class="ScalaEntityDao" %>
+<%@ include file="../jet-includes/java-class-init.jetinc" %>
+<%@ include file="../jet-includes/java-start-class.jetinc" %>
+<% FwSelectType[] allOutputOpts = new FwSelectType[] {}; %>
+<% impu.addImport("org.slf4j.LoggerFactory");%>
+<% String traitbase = tplu.getClassName(Tid.SCALA_ENTITY_DAOBASE.name());%>	
+<% String rowmapper = tplu.getClassName(Tid.SCALA_ROWMAPPERS.name());%>	
+<% String profile = tplu.getClassName(Tid.SCALA_SLICK_PROFILE.name());%>	
+
+<% String withSubTraits = ""; %>
+<% if (isBaseClass) { %>
+<%		List<String> subclsNames = new ArrayList<String>(); %>
+<%		for (Class<?> subcls : subclasses) { %>
+<%			 withSubTraits += " with " + tplu.getClassName(subcls, Tid.SCALA_ENTITY_DAO.name());	%>
+<%		} %>
+<% } else if (isSubClass) { %>
+<%		withSubTraits = " with " + tplu.getClassName(tu.getSuperClass(cc), Tid.SCALA_ENTITY_DAO.name());	%>
+<% } %>
+
+/**
+ * add your own queries here
+ */
+trait <%=classname%> extends <%=traitbase%> { this: <%=profile%> 
+	 <%=tu.getProfileMixins()%>
+	with <%=rowmapper%> <%=withSubTraits%> =>
+	import profile.simple._
+	
+	/**
+	 * this is the last method called, before returning the object to the client. Use this method in FinProdDao to add specific initialization
+	 */
+	//	override def prepare<%=entity%>(obj: <%=entity%>) = {
+	//		obj
+	//	}		
+}
+<% importStringBuffer.insert(importInsertionPoint,	impu.computeSortedImports());%>
