@@ -1,7 +1,7 @@
 
 apply from: "../flca.easymda.plugin/gradle-common/common.gradle"
 
-archivesBaseName = "easymda.cartridge.reactive"
+archivesBaseName = "flca.mda.cartridge.reactive"
 
 sourceSets {
    main {
@@ -24,7 +24,7 @@ dependencies {
 		"org.slf4j:slf4j-api:1.7.6",
 		"junit:junit:4.11",
 		"joda-time:joda-time:2.0",
-		"easymda:easymda.common.api:${easymda_version}"
+		"easymda:flca.common.api:${easymda_version}"
 }	
 
 task s(dependsOn: [standard] ) << {

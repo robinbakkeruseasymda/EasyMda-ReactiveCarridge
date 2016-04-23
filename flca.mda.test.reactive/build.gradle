@@ -1,7 +1,7 @@
 
 apply from: "../flca.easymda.plugin/gradle-common/common.gradle"
 
-archivesBaseName = "easymda.test.reactive"
+archivesBaseName = "flca.mda.test.reactive"
 
 sourceSets {
    main {
@@ -43,7 +43,7 @@ dependencies {
 		"javax:javaee-api:6.0" ,
 		"easymda:FlcaFrwBackend:${easymda_version}",
 		"easymda:FlcaFrwCommon:${easymda_version}",
-		"easymda:easymda.common.api:${easymda_version}",
+		"easymda:flca.common.api:${easymda_version}",
 		"easymda:flca.easymda.generator:${easymda_version}",
 		"easymda:easymda.cartridge.reactive:${easymda_version}",
 		"eclipse-plugin:org.eclipse.jdt.core:3.10.2",
